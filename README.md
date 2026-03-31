@@ -78,3 +78,5 @@ Selector Pattern: Usado na PricingSelector para centralizar queries e evitar SOQ
 Trigger Handler Pattern: Para manter as Triggers limpas e organizadas, delegando a lógica para classes específicas.
 
 Service Layer Pattern: Para isolar a lógica de negócio pesada das Triggers, permitindo que o cálculo seja chamado de outros lugares (como um botão ou um processo em lote).
+
+Segue anexo o diagrama logo abaixo ![Arquitetura Clean](<Arquitetura Clean SalesForce.jpeg>)
