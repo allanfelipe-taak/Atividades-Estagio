@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+	<types>
+		<members>Frete__c</members>
+		<members>Imposto__c</members>
+		<members>Margem__c</members>
+		<members>Order</members>
+		<members>OrderItem</members>
+		<members>PricebookEntry</members>
+		<members>Product2</members>
+		<name>CustomObject</name>
+	</types>
+	<version>66.0</version>
+</Package>
