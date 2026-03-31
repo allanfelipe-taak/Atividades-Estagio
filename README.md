@@ -16,30 +16,6 @@ PricingItem (O Especialista no Cálculo) - Entity dominio
 
 
 
-force-app/main/default/
-├── classes/
-│   ├── Application/
-│   │   └── PricingService.cls       <-- (O Cérebro: Faz os cálculos)
-│   ├── Domain/
-│   │   ├── Handlers/
-│   │   │   ├── OrderHandler.cls      <-- (Trava de Cliente/Status)
-│   │   │   ├── OrderItemHandler.cls  <-- (Aplica Pricing e SaveResult)
-│   │   │   └── MargemHandler.cls     <-- (Trava de Duplicidade)
-│   │   └── Entities/
-│   │       ├── PricingItem.cls       <-- (Objeto de cálculo)
-│   │       └── PricingKey.cls        <-- (Chave de duplicidade)
-│   ├── Infrastructure/
-│   │   └── PricingSelector.cls       <-- (Queries/Buscas no banco)
-│   └── Shared/
-│       ├── Interfaces/
-│       │   └── ContratoTrigger.cls   <-- (O molde dos Handlers)
-│       └── Framework/
-│           └── TriggerMaestro.cls    <-- (O motor que roda as Triggers)
-└── triggers/
-    ├── OrderTrigger.trigger
-    ├── OrderItemTrigger.trigger
-    └── MargemTrigger.trigger
-
 
   1. Camada de Domínio (Domain)
 Entities (Entidades): É a  classe PricingItem.cls.
