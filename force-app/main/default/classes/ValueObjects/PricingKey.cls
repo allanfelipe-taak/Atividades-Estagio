@@ -1,5 +1,4 @@
 /**
- * Value Object que representa a chave única de precificação.
  * Essencial para a regra de duplicidade e comparação de registros.
  */
 public class PricingKey {
