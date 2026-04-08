@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <brand>
+        <headerColor>#0070D2</headerColor>
+        <logo>dreamhouselogo</logo>
+        <logoVersion>1</logoVersion>
+        <shouldOverrideOrgTheme>false</shouldOverrideOrgTheme>
+    </brand>
+    <formFactors>Small</formFactors>
+    <formFactors>Large</formFactors>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
+    <label>Agro implements</label>
+    <navType>Standard</navType>
+    <tabs>standard-Order</tabs>
+    <tabs>standard-SfdcPartnerProvisionProduct</tabs>
+    <tabs>standard-Account</tabs>
+    <tabs>Centro_Distribuicao__c</tabs>
+    <tabs>Margem__c</tabs>
+    <tabs>Frete__c</tabs>
+    <tabs>Imposto__c</tabs>
+    <tabs>Cidade__c</tabs>
+    <tabs>Estado__c</tabs>
+    <tabs>Grupo_de_Conta__c</tabs>
+    <tabs>Hierarquia_de_Produto__c</tabs>
+    <tabs>Condicao_Pagamento__c</tabs>
+    <tabs>Endereco__c</tabs>
+    <tabs>Pais__c</tabs>
+    <uiType>Lightning</uiType>
+    <utilityBar>Agro_implements_UtilityBar</utilityBar>
+</CustomApplication>

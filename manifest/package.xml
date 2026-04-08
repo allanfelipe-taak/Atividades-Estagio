@@ -1,14 +1,48 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
 	<types>
+		<members>Agro_implements</members>
+		<name>CustomApplication</name>
+	</types>
+	<types>
+		<members>Centro_Distribuicao__c</members>
+		<members>Cidade__c</members>
+		<members>Condicao_Pagamento__c</members>
+		<members>Endereco__c</members>
+		<members>Estado__c</members>
 		<members>Frete__c</members>
+		<members>Grupo_de_Conta__c</members>
+		<members>Hierarquia_de_Produto__c</members>
 		<members>Imposto__c</members>
 		<members>Margem__c</members>
 		<members>Order</members>
 		<members>OrderItem</members>
+		<members>Pais__c</members>
 		<members>PricebookEntry</members>
 		<members>Product2</members>
 		<name>CustomObject</name>
+	</types>
+	<types>
+		<members>Centro_Distribuicao__c</members>
+		<members>Cidade__c</members>
+		<members>Condicao_Pagamento__c</members>
+		<members>Endereco__c</members>
+		<members>Estado__c</members>
+		<members>Frete__c</members>
+		<members>Grupo_de_Conta__c</members>
+		<members>Hierarquia_de_Produto__c</members>
+		<members>Imposto__c</members>
+		<members>Margem__c</members>
+		<members>Pais__c</members>
+		<name>CustomTab</name>
+	</types>
+	<types>
+		<members>Agro_implements_UtilityBar</members>
+		<name>FlexiPage</name>
+	</types>
+	<types>
+		<members>*</members>
+		<name>PermissionSet</name>
 	</types>
 	<version>66.0</version>
 </Package>
