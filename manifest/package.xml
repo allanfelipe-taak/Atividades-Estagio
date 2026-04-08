@@ -44,5 +44,19 @@
 		<members>*</members>
 		<name>PermissionSet</name>
 	</types>
+
+	<types>
+        <members>*</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <members>agro_logo</members>
+        <name>ContentAsset</name>
+    </types>
+    <types>
+        <members>*</members>
+        <name>StaticResource</name>
+    </types>
+
 	<version>66.0</version>
 </Package>
