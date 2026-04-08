@@ -17,10 +17,9 @@ public with sharing class OrderItemHandler implements ContratoTrigger {
         
         List<OrderItem> itensParaRecalcular = new List<OrderItem>();
         for (OrderItem novo : (List<OrderItem>) newRecords) {
-            OrderItem antigo = (OrderItem) oldRecords.get(novo.Id);
-            if (novo.Quantity != antigo.Quantity || novo.Product2Id != antigo.Product2Id) {
+            
                 itensParaRecalcular.add(novo);
-            }
+            
         }
         if (!itensParaRecalcular.isEmpty()) {
             new PricingService().processarPricing(itensParaRecalcular);
@@ -44,7 +43,7 @@ public with sharing class OrderItemHandler implements ContratoTrigger {
         Map<Id, Order> mapPedidos = new Map<Id, Order>([SELECT Id, Status FROM Order WHERE Id IN :orderIds]);
 
         for (OrderItem item : itens) {
-            if (mapPedidos.containsKey(item.OrderId) && mapPedidos.get(item.OrderId).Status == 'Ativo') {
+            if (mapPedidos.containsKey(item.OrderId) && mapPedidos.get(item.OrderId).Status == 'Activated') {
                 item.addError('Não é permitido modificar itens de um pedido que já está Ativo.');
             }
         }
