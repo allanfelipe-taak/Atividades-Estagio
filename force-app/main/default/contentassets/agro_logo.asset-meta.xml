@@ -3,4 +3,10 @@
     <isVisibleByExternalUsers>false</isVisibleByExternalUsers>
     <language>pt_BR</language>
     <masterLabel>Agro Logo</masterLabel>
+    <versions>
+        <version>
+            <number>1</number>
+            <pathOnClient>agro_logo.png</pathOnClient>
+        </version>
+    </versions>
 </ContentAsset>
