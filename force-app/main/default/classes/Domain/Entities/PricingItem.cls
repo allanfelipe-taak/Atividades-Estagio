@@ -19,56 +19,45 @@ public with sharing class PricingItem {
 
     
     // LÓGICA DE ESPECIFICIDADE (O NOVO CÉREBRO)
-    // Regra do Matheus: Produto (Milhões) > Clientes (Milhares) > Localidade (Dezenas)
+    // Regra: Produto (Milhões) > Clientes (Milhares) > Localidade (Dezenas)
     
     
     public Integer calcularPeso(SObject parametro) {
-        Integer peso = 0;
+    Integer peso = 0;
+    
+    // Pega os campos de forma segura (sem precisar de try-catch!)
+    Map<String, Object> campos = parametro.getPopulatedFieldsAsMap();
 
-        // --- 3. CATEGORIA LOCALIDADE (Valores Baixos: 1 a 100) ---
-        // País (Se você tiver esse campo, vale 1)
-        try {
-            if (parametro.get('Pais__c') != null && parametro.get('Pais__c') == record.Order.ShippingCountry) peso += 1;
-        } catch(Exception e) { }
-        
-        // Estado (Vale 10)
-        try {
-            if (parametro.get('Estado__c') != null && parametro.get('Estado__c') == record.Order.ShippingState) peso += 10;
-        } catch(Exception e) { }
-        
-        // Cidade (Vale 100 - Mais forte da localidade)
-        try {
-            if (parametro.get('Cidade__c') != null && parametro.get('Cidade__c') == record.Order.ShippingCity) peso += 100;
-        } catch(Exception e) { }
-
-
-        // --- 2. CATEGORIA CLIENTES (Valores Médios: 1.000 a 10.000) ---
-        // Grupo de Conta (Vale 1.000)
-        try {
-            Id grupoDoCliente = record.Order.Account.Grupo_de_Conta__c; 
-            Id grupoNaRegra = (Id)parametro.get('Grupo_de_Conta__c'); 
-            if (grupoDoCliente != null && grupoDoCliente == grupoNaRegra) peso += 1000;
-        } catch(Exception e) { }
-        
-        // Conta Exata (Vale 10.000 - Mais forte de clientes)
-        try {
-            if (parametro.get('Conta__c') != null && parametro.get('Conta__c') == record.Order.AccountId) peso += 10000;
-        } catch(Exception e) { }
-
-
-        // --- 1. CATEGORIA PRODUTOS (Valores Gigantes: 100.000 a 1.000.000) ---
-        // Hierarquia de Produto (Ex: Família do Produto - Vale 100.000)
-        try {
-            if (parametro.get('Hierarquia_Produto__c') != null && parametro.get('Hierarquia_Produto__c') == record.Product2.Family) peso += 100000;
-        } catch(Exception e) { }
-        
-        // Produto Exato (O REI 👑 - Vale 1.000.000!)
-        try {
-            if (parametro.get('Produto__c') != null && parametro.get('Produto__c') == record.Product2Id) peso += 1000000;
-        } catch(Exception e) { }
-
-        return peso;
+    // --- 3. CATEGORIA LOCALIDADE (Valores Baixos: 1 a 100) ---
+    if (campos.containsKey('Pais__c') && parametro.get('Pais__c') != null) {
+        peso += 1;
     }
+    if (campos.containsKey('Estado__c') && parametro.get('Estado__c') != null) {
+        peso += 10;
+    }
+    if (campos.containsKey('Cidade__c') && parametro.get('Cidade__c') != null) {
+        peso += 100;
+    }
+
+    // --- 2. CATEGORIA CLIENTES (Valores Médios: 1.000 a 10.000) ---
+    if (campos.containsKey('Grupo_de_Conta__c') && parametro.get('Grupo_de_Conta__c') != null) {
+        peso += 1000;
+    }
+    if (campos.containsKey('Conta__c') && parametro.get('Conta__c') != null) {
+        peso += 10000;
+    }
+
+    // --- 1. CATEGORIA PRODUTOS (Valores Gigantes: 100.000 a 1.000.000) ---
+    // Corrigido para "Hierarquia_de_Produto__c"
+    if (campos.containsKey('Hierarquia_de_Produto__c') && parametro.get('Hierarquia_de_Produto__c') != null) {
+        peso += 100000;
+    }
+    if (campos.containsKey('Produto__c') && parametro.get('Produto__c') != null) {
+        peso += 1000000; // 👑 O REI
+    }
+
+    return peso;
+}
 
     
    
@@ -97,7 +86,7 @@ public with sharing class PricingItem {
             this.record.Desconto__c = ((precoSugerido - this.record.UnitPrice) / precoSugerido) * 100;
         }
         
-        // CARIMBO DE AUDITORIA (Não mexa aqui, está ótimo para provar pro Matheus)
+        // CARIMBO DE AUDITORIA (Não mexa aqui
         this.record.Custo_Producao__c = c;
         this.record.Valor_Frete__c = f;
         this.record.Porcentagem_Imposto__c = (imposto != null ? imposto : 0); 

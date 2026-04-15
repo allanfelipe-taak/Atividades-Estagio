@@ -7,7 +7,10 @@ public with sharing class TemplateDefaultFields {
     
     public class AccountDefaults implements FieldDefaults {
         public Map<String, Object> getFieldDefaults(Decimal count) {
-            return new Map<String, Object>{ 'Name' => 'Conta Teste ' + count };
+            return new Map<String, Object>{ 
+                'Name' => 'Conta Teste ' + count,
+                'CNPJ__c' => '11.111.111/0001-11' // Adicionando o CNPJ obrigatório!
+            };
         }
     }
 
@@ -19,7 +22,8 @@ public with sharing class TemplateDefaultFields {
 
     public class GrupodeContaDefaults implements FieldDefaults {
         public Map<String, Object> getFieldDefaults(Decimal count) {
-            return new Map<String, Object>{ 'Name' => 'Grupo Teste ' + count };
+            return new Map<String, Object>{ 'Name' => 'Grupo Teste ' + count
+                                        };
         }
     }
 
@@ -32,6 +36,47 @@ public with sharing class TemplateDefaultFields {
     public class CidadeDefaults implements FieldDefaults {
         public Map<String, Object> getFieldDefaults(Decimal count) {
             return new Map<String, Object>{ 'Name' => 'Cidade ' + count };
+        }
+    }
+
+     public class PaisDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal count){
+            return new Map<String, Object>{ 'Name'=> 'Pais' + count};
+        }
+    }
+
+    public class EnderecoDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal count){
+            return new Map<String, Object>{ 'Name' => 'Enderco' + count};
+        }
+    }
+
+     public class CondicaoPagamentoDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal count){
+            return new Map<String, Object>{ 'Name' => 'Condicao Pagamento' + count};
+        }
+    }
+
+    public class CentroDistribuicaoDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal count){
+            return new Map<String, Object>{ 'Name' => 'Centro Distribuicao' + count};
+        }
+    }
+
+    // NOVO: Adicionado para o trator!
+    public class HierarquiadeProdutoDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal count){
+            return new Map<String, Object>{ 'Name' => 'Hierarquia Teste ' + count};
+        }
+    }
+
+    // NOVO: Adicionado para o Cabeçalho do Pedido!
+    public class OrderDefaults implements FieldDefaults {
+        public Map<String, Object> getFieldDefaults(Decimal count){
+            return new Map<String, Object>{ 
+                'EffectiveDate' => Date.today(),
+                'Status' => 'Draft'
+            };
         }
     }
 
@@ -52,6 +97,8 @@ public with sharing class TemplateDefaultFields {
             return new Map<String, Object>{ 'Status__c' => 'Aprovado' };
         }
     }
+    
+   
 
    public class OrderItemDefaults implements FieldDefaults {
         // O segredo está nesse (Decimal d) que a sua interface exige!

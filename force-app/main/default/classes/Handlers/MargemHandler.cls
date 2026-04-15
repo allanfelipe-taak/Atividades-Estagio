@@ -39,27 +39,35 @@ public with sharing class MargemHandler implements ContratoTrigger {
     }
 }
 
-    private void verificarDuplicidade(List<Margem__c> novasMargens, Set<Id> idsIgnorar) {
-        if (idsIgnorar == null) { idsIgnorar = new Set<Id>(); }
+private void verificarDuplicidade(List<Margem__c> novasMargens, Set<Id> idsIgnorar) {
+    if (idsIgnorar == null) { idsIgnorar = new Set<Id>(); }
 
-        Set<PricingKey> chavesNoBanco = new Set<PricingKey>();
-        
-        List<Margem__c> existentes = [SELECT Produto__c, Conta__c, Grupo_de_Conta__c, Estado__c, Cidade__c 
-                                     FROM Margem__c 
-                                     WHERE Id NOT IN :idsIgnorar];
-        
-        for (Margem__c mEx : existentes) {
-            chavesNoBanco.add(new PricingKey(mEx));
-        }
+    // 1. Memória do Passado: O que já está no banco de dados
+    Set<PricingKey> chavesNoBanco = new Set<PricingKey>();
+    List<Margem__c> existentes = [SELECT Produto__c, Conta__c, Grupo_de_Conta__c, 
+                                         Estado__c, Cidade__c, Pais__c, Hierarquia_de_Produto__c
+                                  FROM Margem__c 
+                                  WHERE Id NOT IN :idsIgnorar];
+    
+    for (Margem__c mEx : existentes) {
+        chavesNoBanco.add(new PricingKey(mEx));
+    }
 
-        for (Margem__c m : novasMargens) {
-            PricingKey chaveAtual = new PricingKey(m);
-            
-            if (chavesNoBanco.contains(chaveAtual)) {
-                m.addError('Já existe uma Margem cadastrada para esta combinação de Produto/Cliente/Localidade.');
-            }
+    // 🎯 2. Memória do Presente: O que está na lista do insert AGORA
+    Set<PricingKey> chavesNaListaAtual = new Set<PricingKey>();
+
+    for (Margem__c m : novasMargens) {
+        PricingKey chaveAtual = new PricingKey(m);
+        
+        // A mágica acontece aqui: verificamos no banco OU na lista atual
+        if (chavesNoBanco.contains(chaveAtual) || chavesNaListaAtual.contains(chaveAtual)) {
+            m.addError('🚨 BLOQUEADO: Já existe uma Margem cadastrada para esta combinação!');
+        } else {
+            // Se passou, "batizamos" na lista atual para o próximo não repetir
+            chavesNaListaAtual.add(chaveAtual);
         }
     }
+}
 
     public void afterInsert(List<SObject> newRecords) {}
     public void afterUpdate(List<SObject> newRecords, Map<Id, SObject> oldRecords) {}

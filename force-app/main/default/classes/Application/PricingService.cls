@@ -10,36 +10,69 @@ public with sharing class PricingService {
         }
 
         Map<Id, Order> mapPedidos = new Map<Id, Order>([
-            SELECT Id, AccountId, ShippingCity, ShippingState, 
+            SELECT Id, AccountId, ShippingCity, ShippingState, ShippingCountry, 
                    Centro_Distribuicao__c, Endereco__c 
             FROM Order 
             WHERE Id IN :orderIds
         ]);
 
+        // 2. CORREÇÃO AQUI: Adicionado Custo_Producao__c no SELECT 👇
+        Map<Id, Product2> mapProdutos = new Map<Id, Product2>([
+            SELECT Id, Hierarquia_de_Produto__c, Custo_Producao__c 
+            FROM Product2
+            WHERE Id IN :productIds
+        ]);
+
         Set<Id> accountIds = new Set<Id>();
         Set<String> cidades = new Set<String>();
         Set<String> estados = new Set<String>();
+        Set<String> paises = new Set<String>();
+        Set<Id> hierarquiaIds = new Set<Id>();
 
         for (Order ped : mapPedidos.values()) {
-            accountIds.add(ped.AccountId);
-            cidades.add(ped.ShippingCity);
-            estados.add(ped.ShippingState);
+            if (ped.AccountId != null) accountIds.add(ped.AccountId);
+            if (ped.ShippingCity != null) cidades.add(ped.ShippingCity);
+            if (ped.ShippingState != null) estados.add(ped.ShippingState);
+            if (ped.ShippingCountry != null) paises.add(ped.ShippingCountry);
         }
 
-        List<Margem__c> margens = PricingSelector.buscarMargens(productIds, accountIds, new Set<Id>());
-        List<Imposto__c> impostos = PricingSelector.buscarImpostos(productIds, accountIds);
-        List<Frete__c> fretes = PricingSelector.buscarFretes(productIds, cidades, estados);
+        for (Product2 prod : mapProdutos.values()) {
+            if (prod.Hierarquia_de_Produto__c != null) {
+                hierarquiaIds.add(prod.Hierarquia_de_Produto__c);
+            }
+        }
+
+        List<Margem__c> margens = PricingSelector.buscarMargens(productIds, accountIds, new Set<Id>(), hierarquiaIds);
+        List<Imposto__c> impostos = PricingSelector.buscarImpostos(productIds, estados, paises);
+        List<Frete__c> fretes = PricingSelector.buscarFretes(productIds, hierarquiaIds, cidades, estados, paises);
 
         for (OrderItem itemOriginal : itensOriginais) {
             Order pedidoRelacionado = mapPedidos.get(itemOriginal.OrderId);
             if (pedidoRelacionado == null) continue;
 
             itemOriginal.Order = pedidoRelacionado; 
+            
+            if (mapProdutos.containsKey(itemOriginal.Product2Id)) {
+                // 👇 VINCULAMOS O PRODUTO COMPLETO (COM CUSTO) AO ITEM
+                itemOriginal.Product2 = mapProdutos.get(itemOriginal.Product2Id);
+            }
+
+            // Agora a linha 64 não vai mais dar erro!
             PricingItem entity = new PricingItem(itemOriginal);
             
             Margem__c melhorMargem = (Margem__c) encontrarMelhorParametro(margens, entity);
             Frete__c melhorFrete = (Frete__c) encontrarMelhorParametro(fretes, entity);
             Imposto__c melhorImposto = (Imposto__c) encontrarMelhorParametro(impostos, entity);
+
+            if (melhorMargem != null) {
+                System.debug('🏆 [MOTOR] MARGEM: ' + melhorMargem.Name + ' | Peso: ' + entity.calcularPeso(melhorMargem));
+            }
+            if (melhorFrete != null) {
+                System.debug('🚚 [MOTOR] FRETE: ' + melhorFrete.Name + ' | Peso: ' + entity.calcularPeso(melhorFrete));
+            }
+            if (melhorImposto != null) {
+                System.debug('📑 [MOTOR] IMPOSTO: ' + melhorImposto.Name + ' | Peso: ' + entity.calcularPeso(melhorImposto));
+            }
 
             if (melhorMargem != null && melhorFrete != null && melhorImposto != null) {
                 entity.margem = melhorMargem.Valor__c;
@@ -48,17 +81,10 @@ public with sharing class PricingService {
 
                 entity.aplicarCalculoFinal();
                 
-                // Atribui ao campo padrão UnitPrice
                 itemOriginal.UnitPrice = entity.record.UnitPrice; 
-
-                // --- LINHAS COMENTADAS PARA O DEPLOY PASSAR ---
-                // Descomente apenas após criar os campos no Salesforce Object Manager
-                /*
-                itemOriginal.Valor_de_Frete__c = melhorFrete.Valor__c;
-                itemOriginal.Porcentagem_de_Imposto__c = melhorImposto.Imposto_sobre_custo__c;
-                itemOriginal.Porcentagem_de_Margem__c = melhorMargem.Valor__c;
-                itemOriginal.Custo_Producao_Base__c = entity.custoProducao;
-                */
+                itemOriginal.Valor_Frete__c = melhorFrete.Valor__c;
+                itemOriginal.Porcentagem_Imposto__c = melhorImposto.Imposto_sobre_custo__c;
+                itemOriginal.Porcentagem_Margem__c = melhorMargem.Valor__c;
                 
             } else {
                 itemOriginal.addError('Não está autorizada a venda deste produto devido à falta de parâmetros. Contate o time de Pricing.');
