@@ -70,6 +70,115 @@ public class EnginePricingTest {
         ));
     }
 
+    ///SETUP Finalizado 
+
+
+
+    /// ==================================================
+    // Teste Unitario PricingItem
+    // ====================================================
+
+    @isTest
+    static void testPricingItem_CoberturaTotal() {
+        // ==========================================================
+        // 1. TESTE DO ERRO (Sad Path - Limpa a linha do throw)
+        // ==========================================================
+        Product2 prodSemCusto = new Product2(Name = 'Produto Errado', Custo_Producao__c = null);
+        insert prodSemCusto;
+
+        OrderItem itemErro = new OrderItem(UnitPrice = 0, Quantity = 1);
+        itemErro.Product2 = prodSemCusto;
+
+        try {
+            PricingItem pItemErro = new PricingItem(itemErro);
+            System.assert(false, 'Deveria ter lançado erro por falta de custo!');
+        } catch (PricingItem.PricingException e) {
+            System.assert(e.getMessage().contains('não tem custo cadastrado'), 'Mensagem de erro errada');
+        }
+
+        // ==========================================================
+        // 2. TESTE DE PESOS E CÁLCULO 
+        // ==========================================================
+        // Precisamos de um produto COM custo para o código continuar até o final
+        Product2 prodOk = [SELECT Id, Custo_Producao__c FROM Product2 WHERE Custo_Producao__c != null LIMIT 1];
+        
+        OrderItem itemOk = new OrderItem(UnitPrice = 0, Quantity = 1);
+        itemOk.Product2 = prodOk;
+
+        Test.startTest();
+        PricingItem pItem = new PricingItem(itemOk);
+
+   // 1. Criamos os registros auxiliares primeiro
+Pais__c paisTeste = new Pais__c(Name = 'Brasil');
+insert paisTeste;
+
+Grupo_de_Conta__c grupoTeste = new Grupo_de_Conta__c(Name = 'VIP');
+insert grupoTeste;
+
+Hierarquia_de_Produto__c hierarquiaTeste = new Hierarquia_de_Produto__c(Name = 'Tratores');
+insert hierarquiaTeste;
+
+// 2. Agora montamos a regra usando os IDs que acabamos de criar
+Margem__c regraCompleta = new Margem__c(
+    Pais__c = paisTeste.Id,
+    Grupo_de_Conta__c = grupoTeste.Id,
+    Hierarquia_de_Produto__c = hierarquiaTeste.Id,
+    Produto__c = prodOk.Id 
+);
+        
+        Integer pesoCalculado = pItem.calcularPeso(regraCompleta);
+        System.assert(pesoCalculado > 1000000, 'O peso deve ser alto');
+
+        // Teste do Preço Sugerido e Matemática (Cobre a imagem 1586ce)
+        pItem.frete = 10;
+        pItem.imposto = 10;
+        pItem.margem = 10;
+        
+        pItem.aplicarCalculoFinal();
+        
+        // Validação da Fórmula: (Custo + Frete) * (1 + i) * (1 + m)
+        System.assert(itemOk.UnitPrice > 0, 'O motor deveria ter preenchido o UnitPrice');
+        Test.stopTest();
+    }
+
+    // ==========================================================
+    // 🔍 TESTE DO SELECTOR (Para zerar o vermelho do PricingSelector)
+    // ==========================================================
+   @isTest
+    static void testPricingSelector() {
+        // 1. Criamos os dados necessários para a query do Selector funcionar
+        Account acc = [SELECT Id FROM Account LIMIT 1];
+        Product2 prod = [SELECT Id FROM Product2 LIMIT 1];
+        PricebookEntry pbe = [SELECT Id FROM PricebookEntry WHERE Product2Id = :prod.Id LIMIT 1];
+        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
+        Condicao_Pagamento__c cond = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
+        Endereco__c ender = [SELECT Id FROM Endereco__c LIMIT 1];
+
+        Order ped = new Order(
+            AccountId = acc.Id, EffectiveDate = Date.today(), Status = 'Draft', 
+            Pricebook2Id = Test.getStandardPricebookId(), Centro_Distribuicao__c = cd.Id, 
+            Condicao_Pagamento__c = cond.Id,
+            Endereco__c = ender.Id
+        );
+        insert ped;
+
+        OrderItem item = new OrderItem(
+            OrderId = ped.Id, Product2Id = prod.Id, Quantity = 1, UnitPrice = 100, 
+            PricebookEntryId = pbe.Id
+        );
+        insert item; // Inserimos o item no banco
+
+        Set<Id> idsParaBusca = new Set<Id>{ item.Id };
+
+        // 2. AGORA SIM chamamos o startTest e o Selector
+        Test.startTest();
+        List<OrderItem> resultado = PricingSelector.buscarItensComPedido(idsParaBusca);
+        Test.stopTest();
+
+        // 3. Verificamos se o Selector trouxe as informações do cabeçalho do pedido
+        System.assertEquals(1, resultado.size(), 'O Selector deveria ter encontrado o item.');
+        System.assertNotEquals(null, resultado[0].Order.Centro_Distribuicao__c, 'Deveria ter trazido o CD do Pedido.');
+    }
     // ==========================================================
     //  1. TESTE DE BLOQUEIO: MARGEM
     // ==========================================================
@@ -151,6 +260,34 @@ public class EnginePricingTest {
     }
 
     // ==========================================================
+    // 🔑 TESTE UNITÁRIO: PRICING KEY 
+    // ==========================================================
+    @isTest
+    static void testPricingKeyDireto() {
+        // 1. Pega um Frete do Setup
+        Frete__c f1 = [SELECT Produto__c, Estado__c, Cidade__c, Hierarquia_de_Produto__c, Pais__c FROM Frete__c LIMIT 1];
+        
+        // 2. Cria uma cópia diferente (para testar o equals = false)
+        Frete__c f2 = f1.clone();
+        f2.Cidade__c = null; // Altera um campo para a chave ser diferente
+
+        Test.startTest();
+        PricingKey chave1 = new PricingKey(f1);
+        PricingKey chave2 = new PricingKey(f2);
+        PricingKey chaveIgualA1 = new PricingKey(f1);
+
+        // Força a cobertura do equals (True e False)
+        System.assertEquals(true, chave1.equals(chaveIgualA1), 'Deveriam ser iguais');
+        System.assertEquals(false, chave1.equals(chave2), 'Deveriam ser diferentes');
+        System.assertEquals(false, chave1.equals('Não sou uma chave'), 'Deve retornar false para tipos diferentes');
+
+        // Força a cobertura do hashCode
+        Integer hash = chave1.hashCode();
+        System.assertNotEquals(0, hash, 'O HashCode não pode ser zero');
+        Test.stopTest();
+    }
+
+    // ==========================================================
     // 🔄 1. TESTE DE UPDATE (Cobre o beforeUpdate)
     // ==========================================================
     @isTest
@@ -212,6 +349,8 @@ public class EnginePricingTest {
             System.debug('Sucesso: Capturou o erro de múltiplos produtos!');
         }
     }
+
+    
 
 // ==========================================================
     // 🎯 4. TESTE DO MOTOR: ESPECIFICIDADE (O "Sniper")

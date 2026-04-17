@@ -92,6 +92,8 @@ public with sharing class PricingService {
         } 
     }
 
+   
+
     private SObject encontrarMelhorParametro(List<SObject> candidatos, PricingItem entity) {
         SObject vencedor = null;
         Integer maiorPeso = -1;
@@ -105,4 +107,23 @@ public with sharing class PricingService {
         }
         return vencedor;
     }
+
+    
+    @AuraEnabled // Isso permite que o JavaScript enxergue esse método
+    public static void recalcular(Id orderId) {
+        // Busca os itens
+        List<OrderItem> itens = [SELECT Id FROM OrderItem WHERE OrderId = :orderId];
+        
+        // Faz o "touch" (atualiza os registros para disparar sua Trigger)
+        update itens; 
+        
+        // Atualiza o checkbox do pedido para sumir o aviso
+        update new Order(Id = orderId, Precos_Recalculados__c = true);
+    }
+
+
+
+   
 }
+
+

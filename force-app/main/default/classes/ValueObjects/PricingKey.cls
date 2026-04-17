@@ -46,7 +46,7 @@ public Id paisId;
         code = 31 * code + (cidade == null ? 0 : cidade.hashCode());
         code = 31 * code + (grupoId == null ? 0 : grupoId.hashCode());
         code = 31 * code + (paisId == null ? 0 : paisId.hashCode());
-        code = 31 * code + (hierarquiaId == null ? 0 : hierarquiaId.hashcode());
+        code = 31 * code + (hierarquiaId == null ? 0 : hierarquiaId.hashCode());
         
         return code;
     }

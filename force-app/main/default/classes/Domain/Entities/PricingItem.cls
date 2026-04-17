@@ -10,11 +10,9 @@ public with sharing class PricingItem {
         this.record = item;
         
         // o custo direto do produto para o cálculo ser real
-        if(item.Product2.Custo_Producao__c != null) {
-            this.custoProducao = item.Product2.Custo_Producao__c;
-        } else {
-            this.custoProducao = 100.0; 
-        }
+       if(item.Product2.Custo_Producao__c == null) {
+    throw new PricingException('Erro: O produto ' + item.Product2.Name + ' não tem custo cadastrado!');
+}
     }
 
     
@@ -85,6 +83,10 @@ public with sharing class PricingItem {
             // Se o UnitPrice for menor que o sugerido, teremos um desconto positivo.
             this.record.Desconto__c = ((precoSugerido - this.record.UnitPrice) / precoSugerido) * 100;
         }
+
+        // --- NOVIDADE: CARIMBO DE DATA PARA O AVISO INTELIGENTE ---
+    // Este campo diz ao sistema EXATAMENTE quando o motor rodou.
+    this.record.Data_Ultimo_Calculo__c = System.now();
         
         // CARIMBO DE AUDITORIA (Não mexa aqui
         this.record.Custo_Producao__c = c;

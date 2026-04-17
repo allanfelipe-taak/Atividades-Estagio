@@ -1,0 +1,12 @@
+/* Centralizar o botão e dar um destaque no card */
+.container-botao {
+    display: flex;
+    justify-content: center;
+    background-color: #f3f3f3;
+    border-radius: 4px;
+}
+
+/* Deixar o botão com a largura total (estilo Mobile) */
+.botao-cheio {
+    width: 100%;
+}
