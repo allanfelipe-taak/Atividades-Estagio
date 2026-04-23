@@ -1,4 +1,3 @@
-
 /** * Handler é responsavel por filtrar os eventos do Produto e do Pedido 
  * e direcionar para o PricingService
  */

@@ -120,10 +120,5 @@ public with sharing class PricingService {
         // Atualiza o checkbox do pedido para sumir o aviso
         update new Order(Id = orderId, Precos_Recalculados__c = true);
     }
-
-
-
    
 }
-
-

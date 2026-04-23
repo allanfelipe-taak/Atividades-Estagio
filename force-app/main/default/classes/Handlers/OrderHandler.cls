@@ -18,7 +18,7 @@ public with sharing class OrderHandler implements ContratoTrigger {
             }
 
             // REGRA 2: Não permitir alterações se o pedido estiver com status 'Ativo'
-            if (pedidoAntigo.Status == 'Ativo' && pedidoNovo.Status == 'Ativo') {
+            if (pedidoAntigo.Status == 'Activated' && pedidoNovo.Status == 'Activated') {
                 pedidoNovo.addError('Este pedido está Ativo e não pode ser modificado. Para alterar, retorne o status para rascunho.');
             }
         }
