@@ -16,8 +16,7 @@ public with sharing class PricingItem {
     }
 
     
-    // LÓGICA DE ESPECIFICIDADE (O NOVO CÉREBRO)
-    // Regra: Produto (Milhões) > Clientes (Milhares) > Localidade (Dezenas)
+
     
     
     public Integer calcularPeso(SObject parametro) {
@@ -77,8 +76,6 @@ public with sharing class PricingItem {
             this.record.UnitPrice = precoSugerido;
         }
 
-        // Agora o cálculo do desconto faz sentido! 
-        // Comparamos o PREÇO SUGERIDO pelo motor vs o PREÇO PRATICADO (UnitPrice)
         if (precoSugerido > 0) {
             // Se o UnitPrice for menor que o sugerido, teremos um desconto positivo.
             this.record.Desconto__c = ((precoSugerido - this.record.UnitPrice) / precoSugerido) * 100;

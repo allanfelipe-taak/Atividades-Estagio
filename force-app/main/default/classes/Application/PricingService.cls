@@ -53,11 +53,11 @@ public with sharing class PricingService {
             itemOriginal.Order = pedidoRelacionado; 
             
             if (mapProdutos.containsKey(itemOriginal.Product2Id)) {
-                // 👇 VINCULAMOS O PRODUTO COMPLETO (COM CUSTO) AO ITEM
+                // VINCULAR O PRODUTO COMPLETO (COM CUSTO) AO ITEM
                 itemOriginal.Product2 = mapProdutos.get(itemOriginal.Product2Id);
             }
 
-            // Agora a linha 64 não vai mais dar erro!
+            
             PricingItem entity = new PricingItem(itemOriginal);
             
             Margem__c melhorMargem = (Margem__c) encontrarMelhorParametro(margens, entity);
@@ -65,13 +65,13 @@ public with sharing class PricingService {
             Imposto__c melhorImposto = (Imposto__c) encontrarMelhorParametro(impostos, entity);
 
             if (melhorMargem != null) {
-                System.debug('🏆 [MOTOR] MARGEM: ' + melhorMargem.Name + ' | Peso: ' + entity.calcularPeso(melhorMargem));
+                System.debug('[MOTOR] MARGEM: ' + melhorMargem.Name + ' | Peso: ' + entity.calcularPeso(melhorMargem));
             }
             if (melhorFrete != null) {
-                System.debug('🚚 [MOTOR] FRETE: ' + melhorFrete.Name + ' | Peso: ' + entity.calcularPeso(melhorFrete));
+                System.debug(' [MOTOR] FRETE: ' + melhorFrete.Name + ' | Peso: ' + entity.calcularPeso(melhorFrete));
             }
             if (melhorImposto != null) {
-                System.debug('📑 [MOTOR] IMPOSTO: ' + melhorImposto.Name + ' | Peso: ' + entity.calcularPeso(melhorImposto));
+                System.debug('[MOTOR] IMPOSTO: ' + melhorImposto.Name + ' | Peso: ' + entity.calcularPeso(melhorImposto));
             }
 
             if (melhorMargem != null && melhorFrete != null && melhorImposto != null) {

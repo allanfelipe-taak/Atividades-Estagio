@@ -19,13 +19,13 @@ public with sharing class FreteHandler implements ContratoTrigger {
         for (Frete__c f : fretes) {
             // Validação O QUE (Produto vs Hierarquia)
             Integer prodCount = (f.Produto__c != null ? 1 : 0) + (f.Hierarquia_de_Produto__c != null ? 1 : 0);
-            if (prodCount == 0) f.addError('🚨 Defina um Produto ou uma Hierarquia.');
-            if (prodCount > 1) f.addError('🚨 Escolha apenas Produto OU Hierarquia.');
+            if (prodCount == 0) f.addError('Defina um Produto ou uma Hierarquia.');
+            if (prodCount > 1) f.addError('Escolha apenas Produto OU Hierarquia.');
 
             // Validação ONDE (Localidade)
             Integer geoCount = (f.Cidade__c != null ? 1 : 0) + (f.Estado__c != null ? 1 : 0) + (f.Pais__c != null ? 1 : 0);
-            if (geoCount == 0) f.addError('🚨 Defina uma Localidade (Cidade, Estado ou País).');
-            if (geoCount > 1) f.addError('🚨 Escolha apenas um nível de localidade.');
+            if (geoCount == 0) f.addError('Defina uma Localidade (Cidade, Estado ou País).');
+            if (geoCount > 1) f.addError('Escolha apenas um nível de localidade.');
         }
     }
 

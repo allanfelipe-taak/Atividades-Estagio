@@ -37,7 +37,7 @@ Account accWebSM = new Account(Name='WEBSM', Grupo_de_Conta__c = grupoVip.Id, CN
 
 Hierarquia_de_Produto__c hTrator = new Hierarquia_de_Produto__c(Name='Tratores'); insert hTrator;
 
-// 👇 ATENÇÃO: 
+//  ATENÇÃO: 
 Product2 p1 = new Product2(Name = 'Trator', Hierarquia_de_Produto__c = hTrator.Id, Custo_Producao__c = 1000); insert p1;
 
 Id cdId; Id endId; Id condId;

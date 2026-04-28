@@ -343,7 +343,7 @@ Margem__c regraCompleta = new Margem__c(
         Test.stopTest();
     }
 // ==========================================================
-    // ⚠️ TESTE DE VALIDAÇÃO: PEDIDO ATIVO (Cobre a linha 46)
+    //  TESTE DE VALIDAÇÃO: PEDIDO ATIVO (Cobre a linha 46)
     // ==========================================================
     @isTest
     static void testErroPedidoAtivado() {
@@ -625,7 +625,7 @@ Margem__c regraCompleta = new Margem__c(
     }
 
     // ==========================================================
-    // 🗑️ 2. TESTE DE DELETE/UNDELETE (Cobre os métodos vazios no final)
+    // 2. TESTE DE DELETE/UNDELETE (Cobre os métodos vazios no final)
     // ==========================================================
     @isTest
     static void testDeleteUndeleteParaCobertura() {
@@ -640,7 +640,7 @@ Margem__c regraCompleta = new Margem__c(
     }
 
     // ==========================================================
-    // ⚠️ 3. TESTE DE ERROS (Cobre as linhas de 'addError' vermelhas)
+    // 3. TESTE DE ERROS (Cobre as linhas de 'addError' vermelhas)
     // ==========================================================
     @isTest
     static void testValidacoesNegativasParaCobertura() {
@@ -666,7 +666,7 @@ Margem__c regraCompleta = new Margem__c(
     }
     
     // ==========================================================
-    // ⚠️ TESTES DE VALIDAÇÃO: CAMPOS EXCLUSIVOS DA MARGEM
+    //  TESTES DE VALIDAÇÃO: CAMPOS EXCLUSIVOS DA MARGEM
     // ==========================================================
     @isTest
     static void testErrosCamposExclusivosMargem() {
@@ -738,7 +738,7 @@ Margem__c regraCompleta = new Margem__c(
     
 
 // ==========================================================
-    // 🎯 4. TESTE DO MOTOR: ESPECIFICIDADE (O "Sniper")
+    // 4. TESTE DO MOTOR: ESPECIFICIDADE (O "Sniper")
     // Testa se a lógica escolheu as Regras Campeãs corretamente para 1 item
     // ==========================================================
     @isTest
@@ -773,7 +773,7 @@ Margem__c regraCompleta = new Margem__c(
     }
 
     // ==========================================================
-    // 🚜 5. TESTE DO MOTOR: BULKIFICATION 
+    //  5. TESTE DO MOTOR: BULKIFICATION 
     // Testa se a Trigger aguenta 200 registros sem estourar limites do Salesforce
     // ==========================================================
     @isTest
@@ -915,7 +915,7 @@ Margem__c regraCompleta = new Margem__c(
     }
     
     // ==========================================================
-    // ⚠️ TESTE: VENDA NÃO AUTORIZADA (PRODUTO SEM PARÂMETROS)
+    // TESTE: VENDA NÃO AUTORIZADA (PRODUTO SEM PARÂMETROS)
     // Cobre a linha 90 do PricingService
     // ==========================================================
     @isTest
@@ -955,7 +955,7 @@ Margem__c regraCompleta = new Margem__c(
     }
 
     // ==========================================================
-    // 🔘 TESTE: BOTÃO DE RECALCULAR AURA
+    //  TESTE: BOTÃO DE RECALCULAR AURA
     // Cobre as linhas 113 a 121 do PricingService
     // ==========================================================
     @isTest
@@ -1011,7 +1011,7 @@ Margem__c regraCompleta = new Margem__c(
     }
     
  // ==========================================================
-    // 💥 TESTE: VALIDAÇÕES E EXCEÇÕES DA TEST FACTORY
+    // TESTE: VALIDAÇÕES E EXCEÇÕES DA TEST FACTORY
     // Força os erros de Nulo, Contrato e Classe Inexistente!
     // ==========================================================
     @isTest
