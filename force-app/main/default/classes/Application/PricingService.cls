@@ -16,9 +16,9 @@ public with sharing class PricingService {
             WHERE Id IN :orderIds
         ]);
 
-        // 2. CORREÇÃO AQUI: Adicionado Custo_Producao__c no SELECT 👇
+       // 2. CORREÇÃO AQUI: Adicionado Custo_Producao__c E Name no SELECT 👇
         Map<Id, Product2> mapProdutos = new Map<Id, Product2>([
-            SELECT Id, Hierarquia_de_Produto__c, Custo_Producao__c 
+            SELECT Id, Name, Hierarquia_de_Produto__c, Custo_Producao__c 
             FROM Product2
             WHERE Id IN :productIds
         ]);
