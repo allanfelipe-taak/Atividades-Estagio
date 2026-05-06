@@ -23,6 +23,7 @@ global with sharing class DataIntegrationFields {
 		public Date effectiveDate;
 		public String accountExternalId;
 		public String pricebook2ExternalId;
+		
 
 		public List<OrderItemINData> orderItemList {get; set;}
 
