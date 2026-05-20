@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>IntegrationLayout</fullName>
+    <columns>NAME</columns>
+    <columns>Method__c</columns>
+    <columns>Endpoint__c</columns>
+    <columns>Timeout__c</columns>
+    <columns>AccessToken__c</columns>
+    <columns>User__c</columns>
+    <columns>Password__c</columns>
+    <filterScope>Everything</filterScope>
+    <label>Integration Layout</label>
+</ListView>

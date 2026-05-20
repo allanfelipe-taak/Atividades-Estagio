@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write(**/*)",
+      "Bash(sf *)",
+      "Bash(python3 *)",
+      "Bash(mkdir *)",
+      "Bash(cat *)"
+    ]
+  }
+}

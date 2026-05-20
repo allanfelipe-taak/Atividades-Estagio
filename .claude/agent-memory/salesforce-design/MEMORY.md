@@ -1,0 +1,1 @@
+- [Story 6 Architecture](story-6-architecture.md) — Risk Probability Cap & Audit System architecture with performance & compliance specs

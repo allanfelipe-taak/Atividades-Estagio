@@ -1,51 +1,87 @@
 @RestResource(urlMapping='/upsertOrder/*')
 global with sharing class IntegrationInboundOrder {
+	/**
+	 * FactoryDataIntegration Class => Valida campos obrigatórios e converte request para objeto
+	 * IntegrationUtils Class => Faz o dml dos registros (Upsert)
+	 * deletedOrderItem method => true => Apaga o OrderItem, false => Marca o OrderItem como deletado (Campo Boolean)
+	 */
 	@HttpPost
-	global static List<DataIntegrationFields.Response> upsertOrder(List<DataIntegrationFields.OrderINData> orderRequestList) {
-		System.debug('orderRequestList => ' + orderRequestList);
-		Boolean hasError = false;
-		Boolean hasDeleted = false;
-		String orderExternalIds = '';
+	global static void doPost(List<DataIntegrationFields.OrderINData> orderRequestList) {
+		SavePoint savePoint = Database.setSavePoint();
+		RestResponse response = RestContext.response;
+
 		List<Order> orderToUpsertList = new List<Order>();
+		List<String> orderExternalIdList = new List<String>();
 		Map<String, String> orderExternalIdToOrderItem = new Map<String, String>();
 		List<DataIntegrationFields.ResponseParent> orderResponseList = new List<DataIntegrationFields.ResponseParent>();
-		List<DataIntegrationFields.OrderItemINData> orderItemToUpsertList = fillOrderExternalIdInOrderItem(orderRequestList, orderExternalIdToOrderItem);
 		Map<String, List<DataIntegrationFields.Response>> orderItemResponseList = new Map<String, List<DataIntegrationFields.Response>>();
+		List<DataIntegrationFields.OrderItemINData> orderItemToUpsertList = new List<DataIntegrationFields.OrderItemINData>();
+		String integrationLogId;
 
-		// Converting template to object list and validating required fields
-		orderExternalIds = FactoryDataIntegration.convertSObject(new Order(), 'IN', orderRequestList, orderResponseList, orderToUpsertList);
-		// Upserting records (Order)
-		hasError = IntegrationUtils.upsertRecords(
-			Database.upsert(orderToUpsertList, Order.ExternalId__c, false), orderResponseList, orderToUpsertList, Order.ExternalId__c
-		);
+		try {
+			orderItemToUpsertList = fillOrderItemListToUpsert(orderRequestList, orderExternalIdToOrderItem);
 
-		// Mark OrderItem as deleted if not received
-		hasDeleted = deletedOrderItem(orderItemToUpsertList, false); // true => Apaga o OrderItem, false => Marca o OrderItem como deletado (Campo Boolean)
-		// Upserting OrderItems
-		if (!orderItemToUpsertList.isEmpty()) orderItemResponseList.putAll(upsertOrderItem(orderItemToUpsertList, orderExternalIdToOrderItem, hasDeleted));
-		// Fill response list with items
-		if (!orderItemResponseList.isEmpty()) hasError = fillResponseList(orderResponseList, orderItemResponseList);
+			FactoryDataIntegration.convertSObject(
+				new Order(), 'IN', orderRequestList, orderResponseList, orderToUpsertList, orderExternalIdList
+			);
 
-		String endpoint = System.Url.getOrgDomainUrl().toExternalForm() + '/services/apexrest/upsertOrder/*';
-		String integrationLogId = IntegrationLog.createLog(
-			'Order', orderExternalIds, 'Inbound', JSON.serialize(orderRequestList), JSON.serialize(orderResponseList), endpoint, hasError, hasDeleted
-		);
-		if (integrationLogId != null) updateOrderWithIntegrationLogId(orderToUpsertList, integrationLogId, 'IN');
+			IntegrationUtils.upsertRecords(
+				Database.upsert(orderToUpsertList, Order.Fields.ExternalId__c, false), orderResponseList, orderToUpsertList, Order.Fields.ExternalId__c
+			);
 
-		System.debug('orderResponseList => ' + orderResponseList);
-		return orderResponseList;
+			Boolean hasDeleted = deletedOrderItem(orderItemToUpsertList, false);
+
+			if (!orderItemToUpsertList.isEmpty()) {
+				upsertOrderItem(orderItemToUpsertList, orderExternalIdToOrderItem, orderItemResponseList);
+			}
+
+			Boolean hasAnyError = false;
+			if (!orderItemResponseList.isEmpty()) {
+				hasAnyError = fillResponseList(orderResponseList, orderItemResponseList);
+			}
+
+			Integer statusCode = hasAnyError ? 400 : 200;
+			if (!Test.isRunningTest()) {
+				response.responseBody = Blob.valueOf(JSON.serialize(orderResponseList));
+				response.statusCode = statusCode;
+			}
+
+			String errorMessage = hasAnyError ? getErrors(orderResponseList) : '';
+			integrationLogId = IntegrationLog.createLog(
+				'Order',
+				orderExternalIdList,
+				'Inbound',
+				JSON.serialize(orderRequestList),
+				JSON.serialize(orderResponseList),
+				errorMessage,
+				System.Url.getOrgDomainUrl().toExternalForm() + '/services/apexrest/upsertOrder/*',
+				statusCode,
+				hasAnyError,
+				hasDeleted
+			);
+		}
+		catch (Exception ex) {
+			System.debug('Do Post Exception => ' + ex.getMessage() + ' - ' + ex.getStackTraceString());
+			Database.rollback(savePoint);
+			response.responseBody = Blob.valueOf(ex.getMessage());
+			response.statusCode = 400;
+		}
+
+		if (!String.isBlank(integrationLogId)) {
+			updateOrderWithIntegrationLogId(orderToUpsertList, integrationLogId, 'IN');
+		}
 	}
 
-	public static List<DataIntegrationFields.OrderItemINData> fillOrderExternalIdInOrderItem(List<DataIntegrationFields.OrderINData> orderRequestList,
-																							Map<String, String> orderExternalIdToOrderItem) {
+	public static List<DataIntegrationFields.OrderItemINData> fillOrderItemListToUpsert(
+		List<DataIntegrationFields.OrderINData> orderRequestList, Map<String, String> orderExternalIdToOrderItemMap
+	) {
 		List<DataIntegrationFields.OrderItemINData> orderItemToUpsertList = new List<DataIntegrationFields.OrderItemINData>();
 
 		for (DataIntegrationFields.OrderINData order : orderRequestList){
 			if (order.orderItemList != null) {
-				// Putting the Order's ExternalId parameter in the OrderItem
-				for (DataIntegrationFields.OrderItemINData orderItem : order.orderItemList) {
-					orderExternalIdToOrderItem.put(orderItem.externalId, order.externalId);
-					orderItem.orderExternalId = order.externalId;
+				for (DataIntegrationFields.OrderItemINData orderItemData : order.orderItemList) {
+					orderExternalIdToOrderItemMap.put(orderItemData.externalId, order.externalId);
+					orderItemData.orderExternalId = order.externalId;
 				}
 
 				orderItemToUpsertList.addAll(order.orderItemList);
@@ -55,19 +91,23 @@ global with sharing class IntegrationInboundOrder {
 		return orderItemToUpsertList;
 	}
 
-	public static Map<String, List<DataIntegrationFields.Response>> upsertOrderItem(List<DataIntegrationFields.OrderItemINData> orderItemRequestList,
-																					Map<String, String> orderExternalIdToOrderItem, Boolean hasDeleted) {
-		Map<String, List<DataIntegrationFields.Response>> responseMap = new Map<String, List<DataIntegrationFields.Response>>();
+	public static void upsertOrderItem(
+		List<DataIntegrationFields.OrderItemINData> orderItemRequestList, Map<String, String> orderExternalIdToOrderItem,
+		Map<String, List<DataIntegrationFields.Response>> orderItemResponseList
+	) {
 		List<OrderItem> orderItemToUpsertList = new List<OrderItem>();
 
-		// Converting template to object list and validating required fields
-		FactoryDataIntegration.convertSObjectChild(new OrderItem(), 'IN', orderItemRequestList, responseMap, orderItemToUpsertList);
+		FactoryDataIntegration.convertSObjectChild(
+			new OrderItem(), 'IN', orderItemRequestList, orderItemResponseList, orderItemToUpsertList
+		);
 
-		// Upserting records
-		List<Database.UpsertResult> upsertResults = Database.upsert(orderItemToUpsertList, OrderItem.ExternalId__c, false);
-		IntegrationUtils.upsertChildRecords(upsertResults, responseMap, orderItemToUpsertList, orderExternalIdToOrderItem, OrderItem.ExternalId__c);
-
-		return responseMap;
+		IntegrationUtils.upsertChildRecords(
+			Database.upsert(orderItemToUpsertList, OrderItem.Fields.ExternalId__c, false),
+			orderItemResponseList,
+			orderItemToUpsertList,
+			orderExternalIdToOrderItem,
+			OrderItem.Fields.ExternalId__c
+		);
 	}
 
 	public static Boolean deletedOrderItem(List<DataIntegrationFields.OrderItemINData> orderItemRequestList, Boolean willDeleted) {
@@ -82,12 +122,12 @@ global with sharing class IntegrationInboundOrder {
 		}
 
 		for (OrderItem orderItem : [
-										SELECT Id, DeletedProduct__c
-										FROM OrderItem
-										WHERE ExternalId__c NOT IN: orderItemExternalIdSet
-										AND Order.ExternalId__c IN: orderExternalIdSet
-										AND DeletedProduct__c = false
-									]) {
+			SELECT Id, DeletedProduct__c
+			  FROM OrderItem
+			 WHERE ExternalId__c NOT IN: orderItemExternalIdSet
+			   AND Order.ExternalId__c IN: orderExternalIdSet
+			   AND DeletedProduct__c = false
+		]) {
 			if (willDeleted) deleteOrderItemList.add(orderItem);
 			else {
 				orderItem.DeletedProduct__c = true;
@@ -101,49 +141,82 @@ global with sharing class IntegrationInboundOrder {
 		return (!deleteOrderItemList.isEmpty() || !updateOrderItemList.isEmpty());
 	}
 
-	public static Boolean fillResponseList(List<DataIntegrationFields.ResponseParent> orderResponseList,
-										Map<String, List<DataIntegrationFields.Response>> orderItemResponseList) {
-		Boolean hasError = false;
+	public static Boolean fillResponseList(
+		List<DataIntegrationFields.ResponseParent> orderResponseList,
+		Map<String, List<DataIntegrationFields.Response>> orderItemResponseList
+	) {
+		Boolean hasAnyError = false;
 
-		// Associating child object's response with object response
 		for (DataIntegrationFields.ResponseParent response : orderResponseList) {
 			response.items = new List<DataIntegrationFields.Response>();
 
-			if (orderItemResponseList.containsKey(response.externalId))
+			if (orderItemResponseList.containsKey(response.externalId)) {
 				response.items.addAll(orderItemResponseList.get(response.externalId));
+			}
 			else if (orderItemResponseList.containsKey(response.salesforceId))
 				response.items.addAll(orderItemResponseList.get(response.salesforceId));
-		}
 
-		// Checking integration errors to log
-		for (DataIntegrationFields.ResponseParent responseOrder : orderResponseList) {
-			if (responseOrder.hasError) {
-				hasError = true;
-				break;
-			}
+			if (response.hasError) hasAnyError = true;
 			else {
-				for (DataIntegrationFields.Response response : responseOrder.items) {
-					if (response.hasError) {
-						hasError = true;
+				for (DataIntegrationFields.Response responseItems : response.items) {
+					if (responseItems.hasError) {
+						hasAnyError = true;
 						break;
 					}
 				}
 			}
 		}
 
-		return hasError;
+		return hasAnyError;
+	}
+
+	public static String getErrors(List<DataIntegrationFields.ResponseParent> orderResponseList) {
+		String errorMessage = '';
+
+		for (DataIntegrationFields.ResponseParent orderResponse : orderResponseList) {
+			Boolean hasError = false;
+			String currentErrorMessage = '';
+
+			if (orderResponse.hasError) {
+				errorMessage += orderResponse.errorMessage + '. ';
+			}
+
+			for (DataIntegrationFields.Response item : orderResponse.items) {
+				if (item.hasError) {
+					errorMessage += item.errorMessage + '. ';
+					currentErrorMessage += item.errorMessage + '. ';
+					hasError = true;
+				}
+			}
+
+			orderResponse.hasError = hasError;
+			orderResponse.errorMessage = orderResponse.errorMessage == null ?
+				currentErrorMessage :
+				orderResponse.errorMessage + '. ' + currentErrorMessage;
+		}
+
+		return errorMessage;
 	}
 
 	public static void updateOrderWithIntegrationLogId(List<Order> orderList, String integrationLogId, String integrationType) {
-		List<Order> orderUpdateList = new List<Order>();
+		try {
+			List<Order> orderUpdateList = new List<Order>();
 
-		for (Order order : [SELECT Id, IntegrationLogInbound__c, IntegrationLogOutbound__c FROM Order WHERE Id IN: orderList]) {
-			if (integrationType == 'IN') order.IntegrationLogInbound__c = integrationLogId;
-			else order.IntegrationLogOutbound__c = integrationLogId;
+			for (Order order : [SELECT Id, IntegrationLogInbound__c, IntegrationLogOutbound__c FROM Order WHERE Id IN: orderList]) {
+				if (integrationType == 'IN') {
+					order.IntegrationLogInbound__c = integrationLogId;
+				}
+				else order.IntegrationLogOutbound__c = integrationLogId;
 
-			orderUpdateList.add(order);
+				orderUpdateList.add(order);
+			}
+
+			if (!orderUpdateList.isEmpty()) update orderUpdateList;
 		}
-
-		if (!orderUpdateList.isEmpty()) update orderUpdateList;
+		catch (Exception ex) {
+			System.debug('Update Order With Log Id => ' + ex.getMessage());
+		}
 	}
+
+	public class CustomException extends Exception {}
 }

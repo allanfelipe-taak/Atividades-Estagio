@@ -38,8 +38,10 @@ public with sharing class IntegrationUtils {
 	}
 
 	// Child records upsert validation, adding results to the response list
-	public static void upsertChildRecords(List<Database.UpsertResult> upsertResults, Map<String, List<DataIntegrationFields.Response>> responseMap,
-											List<SObject> sobjectListToUpsert, Map<String, String> parentExternalIdToChild, Schema.SObjectField field) {
+	public static void upsertChildRecords(
+		List<Database.UpsertResult> upsertResults, Map<String, List<DataIntegrationFields.Response>> responseMap,
+		List<SObject> sobjectListToUpsert, Map<String, String> parentExternalIdToChild, Schema.SObjectField field
+	) {
 		for (Integer i = 0; i < upsertResults.size(); i++) {
 			DataIntegrationFields.Response responseData = new DataIntegrationFields.Response();
 			SObject objectResult = sobjectListToUpsert[i];
@@ -66,5 +68,23 @@ public with sharing class IntegrationUtils {
 				responseMap.put(responseKey, new List<DataIntegrationFields.Response>());
 			responseMap.get(responseKey).add(responseData);
 		}
+	}
+
+	public static HttpResponse executeCallout(
+		String endpoint, String payload, Map<String, String> requestHeaders, String method, Integer timeout
+	) {
+		HttpRequest request = new HttpRequest();
+		request.setMethod(method);
+		request.setTimeout(timeout);
+		request.setEndpoint(endpoint);
+		request.setBody(payload);
+
+		if (requestHeaders != null && !requestHeaders.isEmpty()) {
+			for (String headerKey : requestHeaders.keySet()) {
+				request.setHeader(headerKey, requestHeaders.get(headerKey));
+			}
+		}
+
+		return (new Http()).send(request);
 	}
 }

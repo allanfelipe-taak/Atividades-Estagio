@@ -33,4 +33,21 @@ public with sharing class IntegrationUtilsTest {
 			IntegrationUtils.upsertChildRecords(Database.upsert(accountErrorList, Account.Id, false), responseMap, accountList, accountMap, Account.Name);
 		Test.stopTest();
 	}
+
+	@IsTest
+	public static void executeCalloutTest() {
+		String namedCredential = System.Url.getOrgDomainUrl().toExternalForm() + '/services/apexrest/upsertOneOrder/';
+		String payload = 'Class Test';
+		Map<String, String> requestHeaders = new Map<String, String>{
+			'Content-Type' => 'application/json',
+			'Authorization' => 'Bearer ' + 'Test'
+		};
+		String method = 'POST';
+		Integer timeout = 110000;
+
+		Test.startTest();
+			Test.setMock(HttpCalloutMock.class, new MockHttpResponse(true, TestUtility.getBody(), TestUtility.getBody()));
+			IntegrationUtils.executeCallout(namedCredential, payload, requestHeaders, method, timeout);
+		Test.stopTest();
+	}
 }

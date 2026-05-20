@@ -43,11 +43,38 @@ public with sharing class IntegrationInboundOrderTest {
 	@IsTest
 	public static void upsertOrderTest() {
 		List<DataIntegrationFields.OrderINData> orderRequestList = fillOrderINDataList();
-		System.debug('orderRequestList => ' + orderRequestList);
-		System.debug('orderRequestList items => ' + orderRequestList[0].orderItemList);
 
 		Test.startTest();
-			IntegrationInboundOrder.upsertOrder(orderRequestList);
+			IntegrationInboundOrder.doPost(orderRequestList);
+		Test.stopTest();
+	}
+
+	@IsTest
+	public static void upsertOrderExceptionTest() {
+		RestContext.response = new RestResponse();
+
+		Test.startTest();
+			IntegrationInboundOrder.doPost(null);
+		Test.stopTest();
+	}
+
+	@IsTest
+	public static void updateOrderWithIntegrationLogId() {
+		Order currentOrder = getOrder();
+
+		Test.startTest();
+			IntegrationInboundOrder.updateOrderWithIntegrationLogId(
+				new List<Order>{ currentOrder },
+				null,
+				'IN'
+			);
+			IntegrationInboundOrder.updateOrderWithIntegrationLogId(
+				new List<Order>{ currentOrder },
+				null,
+				'OUT'
+			);
+
+			IntegrationInboundOrder.updateOrderWithIntegrationLogId(null, null, null);
 		Test.stopTest();
 	}
 
@@ -97,5 +124,19 @@ public with sharing class IntegrationInboundOrderTest {
 		orderItemINData.pricebookEntryExternalId = orderItem.PricebookEntry.ExternalId__c;
 
 		return orderItemINData;
+	}
+
+	public static Order getOrder() {
+		Order currentOrder;
+
+		for (Order retrievedOrder : [
+			SELECT Id
+			  FROM Order
+			 LIMIT 1
+		]) {
+			currentOrder = retrievedOrder;
+		}
+
+		return currentOrder;
 	}
 }

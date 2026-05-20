@@ -33,7 +33,14 @@ public with sharing class FactoryDataIntegrationTest {
 		List<Order> orderToUpsertList = new List<Order>();
 
 		Test.startTest();
-			FactoryDataIntegration.convertSObject(new Order(), 'IN', orderRequestList, responseList, orderToUpsertList);
+			FactoryDataIntegration.convertSObject(
+				new Order(),
+				'IN',
+				orderRequestList,
+				responseList,
+				orderToUpsertList,
+				new List<String>{ orderRequestList[0].externalId }
+			);
 		Test.stopTest();
 	}
 

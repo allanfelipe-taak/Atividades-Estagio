@@ -23,13 +23,32 @@ public with sharing class OrderHandler implements ContratoTrigger {
             }
         }
     }
+    
+     // 1. REGRA PARA PEDIDOS NOVOS (Insert)
+    public void afterInsert(List<SObject> newRecords) {
+        for (Order pedidoNovo : (List<Order>) newRecords) {
+            // Se o pedido já nasce com ExternalId, a gente já envia!
+            if (pedidoNovo.ExternalId__c != null) {
+                // Linha desativada para não quebrar o deploy do projeto novo:
+                // IntegrationOutboundOrder.sendOrderToERP(pedidoNovo.Id);
+            }
+        }
+    }
+  
+    public void afterUpdate(List<SObject> newRecords, Map<Id, SObject> oldRecords) {
+        for (Order pedidoNovo : (List<Order>) newRecords) {
+            Order pedidoAntigo = (Order) oldRecords.get(pedidoNovo.Id);
 
-    // --- AJUSTE NAS ASSINATURAS PARA BATER COM A INTERFACE ---
-    
-    public void afterInsert(List<SObject> newRecords) {}
-    
-    public void afterUpdate(List<SObject> newRecords, Map<Id, SObject> oldRecords) {}
-    
+            // A MÁGICA ESTÁ AQUI:
+            // Só dispara o Outbound se o ExternalId não for nulo e não for um update de log
+            Boolean foiApenasAtualizacaoDeLog = pedidoNovo.IntegrationLogInbound__c != pedidoAntigo.IntegrationLogInbound__c;
+
+            if (pedidoNovo.ExternalId__c != null && !foiApenasAtualizacaoDeLog) {
+                // Linha desativada para não quebrar o deploy do projeto novo:
+                // IntegrationOutboundOrder.sendOrderToERP(pedidoNovo.Id);
+            }
+        }
+    }
     
     public void afterDelete(List<SObject> oldRecords) {}
     
