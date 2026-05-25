@@ -1,0 +1,450 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║        ProjetoPricing: Portuguese → English Migration Cleanup Plan         ║
+║                                                                            ║
+║                          PLANNING DOCUMENT PACKAGE                         ║
+║                                                                            ║
+║                           2026-05-20 @ 19:56                              ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+SITUATION
+═════════════════════════════════════════════════════════════════════════════
+
+We have completed a major English language refactoring:
+  ✓ Frete__c    → Freight__c
+  ✓ Margem__c   → Margin__c  
+  ✓ Imposto__c  → Tax__c
+  
+Plus corresponding handlers and triggers.
+
+BLOCKING ISSUE:
+  ⚠ 5 Flows still reference old Portuguese objects
+  ⚠ These Flows prevent destructive deletion of old objects
+  ⚠ Must delete Flows BEFORE we can delete old objects
+
+SOLUTION:
+  Complete 5-phase cleanup process (4 calendar days, 2.5 hours active work)
+
+═════════════════════════════════════════════════════════════════════════════
+
+DOCUMENTS IN THIS FOLDER
+═════════════════════════════════════════════════════════════════════════════
+
+READ THESE IN ORDER (based on your role):
+
+FOR EVERYONE:
+  1. EXECUTIVE-SUMMARY.md
+     → 5-minute overview of situation, timeline, and decisions needed
+     → START HERE if you're new to this
+
+FOR DECISION MAKERS (Managers, Tech Leads):
+  2. cleanup-summary.md
+     → Timeline (4 days), phases, and go/no-go gates
+  3. risk-assessment.md
+     → Risk matrix, mitigation strategies, escalation triggers
+  4. BLOCKING-FLOWS.md
+     → List of 5 Flow IDs that must be deleted
+     → Investigation template for Phase 1
+
+FOR DEVOPS/QA (Execution team):
+  2. cleanup-plan.md
+     → Complete detailed procedures for each phase
+     → All commands with examples
+     → Pre/post checklists
+  3. devops-commands.sh
+     → Interactive bash script for Phase 1 through 5
+     → Copy-paste ready commands
+     → Built-in validation
+  4. risk-assessment.md
+     → Contingency plans if something goes wrong
+
+FOR TECHNICAL ARCHITECTS:
+  - All of the above (60 minutes to read completely)
+
+═════════════════════════════════════════════════════════════════════════════
+
+QUICK FACTS
+═════════════════════════════════════════════════════════════════════════════
+
+What:        Remove 3 old Portuguese objects + 5 blocking Flows
+Where:       TaakProjetoPricing org
+When:        Starting TODAY, 4-day process
+Who:         DevOps (lead), QA (monitoring), Tech Lead (approval)
+Why:         Complete migration, enable use of new English objects
+Cost:        2.5 hours active work + 48 hrs monitoring
+Risk:        Low-Medium (well-documented contingencies)
+
+═════════════════════════════════════════════════════════════════════════════
+
+PHASES (At a Glance)
+═════════════════════════════════════════════════════════════════════════════
+
+PHASE 1: Identify 5 Blocking Flows (TODAY)
+  Owner: DevOps
+  Time:  1-2 hours
+  Task:  Document what each Flow does, confirm business doesn't need them
+  Gate:  Get approval to delete
+
+PHASE 2: Deactivate Flows (DAY 2)  
+  Owner: DevOps (execute) + QA (monitor)
+  Time:  30 min execution + 48 hrs monitoring
+  Task:  Turn off Flows, watch for integration errors
+  Gate:  Zero errors, order processing working
+
+PHASE 3: Delete Flows (DAY 4)
+  Owner: DevOps
+  Time:  30 minutes
+  Task:  Permanently remove Flow definitions from org
+  Gate:  All Flows confirmed deleted
+
+PHASE 4: Deploy Destructive Changes (DAY 4)
+  Owner: DevOps
+  Time:  15 minutes execution
+  Task:  Remove old objects, handlers, triggers from org
+  Gate:  Dry-run passes before real deployment
+
+PHASE 5: Validate & Confirm (DAY 4)
+  Owner: DevOps + QA
+  Time:  30 minutes
+  Task:  Verify old objects gone, new objects working
+  Gate:  All checks pass
+
+═════════════════════════════════════════════════════════════════════════════
+
+KEY DECISIONS NEEDED BEFORE DAY 1 EXECUTION
+═════════════════════════════════════════════════════════════════════════════
+
+1. CAN WE DELETE THESE 5 FLOWS?
+   ❓ Are they business-critical?
+   → Phase 1 investigation answers this
+
+2. IS 48-HOUR MONITORING ACCEPTABLE?
+   ❓ Can business function without Flows for 2 days?
+   → Minimum 24 hours recommended
+
+3. WHO APPROVES FLOW DELETION?
+   ❓ Need stakeholder buy-in
+   → Tech Lead, Product Owner, Salesforce Admin
+
+═════════════════════════════════════════════════════════════════════════════
+
+HOW TO GET STARTED
+═════════════════════════════════════════════════════════════════════════════
+
+STEP 1: Read EXECUTIVE-SUMMARY.md (5 minutes)
+        └─→ Understand situation, timeline, risks
+
+STEP 2: Choose your path:
+
+        IF YOU'RE A DECISION MAKER:
+          Read:  cleanup-summary.md (15 min)
+                 risk-assessment.md (20 min)
+          Then:  Get stakeholder approvals
+          
+        IF YOU'RE DEVOPS:
+          Read:  cleanup-plan.md (30 min)
+                 devops-commands.sh (10 min)
+          Then:  Start Phase 1: bash devops-commands.sh
+
+        IF YOU'RE TECH LEAD:
+          Read:  All documents (60 min)
+          Then:  Approve/modify plan, assign owners
+
+STEP 3: Begin Phase 1 (Flow Investigation)
+
+═════════════════════════════════════════════════════════════════════════════
+
+FILE DESCRIPTIONS
+═════════════════════════════════════════════════════════════════════════════
+
+EXECUTIVE-SUMMARY.md (11 KB)
+  What:   5-min overview for decision makers
+  For:    Everyone (especially managers)
+  Time:   5 minutes to read
+  Contains: Situation, timeline, decisions, approvals, FAQ
+
+README.md (10 KB)
+  What:   Index and navigation guide
+  For:    Everyone (reference/context)
+  Time:   5 minutes to read
+  Contains: Document index, quick reference, reading order
+
+cleanup-summary.md (10 KB)
+  What:   Timeline and phase overview
+  For:    Decision makers, team leads
+  Time:   15 minutes to read
+  Contains: What's done, what's blocking, phases, gates
+
+cleanup-plan.md (12 KB)
+  What:   Complete detailed procedures
+  For:    DevOps/QA executing the cleanup
+  Time:   30 minutes to read
+  Contains: Every step, every command, every check
+
+devops-commands.sh (14 KB)
+  What:   Interactive bash script, ready to run
+  For:    DevOps engineer during execution
+  Time:   10 minutes to review before running
+  Contains: Phase-by-phase automation, validation, logging
+
+risk-assessment.md (16 KB)
+  What:   Risk analysis and contingencies
+  For:    Tech lead, managers, DevOps
+  Time:   20 minutes to read
+  Contains: 8 major risks, probabilities, mitigations, go/no-go
+
+BLOCKING-FLOWS.md (8 KB)
+  What:   Investigation template for 5 Flows
+  For:    DevOps for Phase 1 execution
+  Time:   Reference during investigation
+  Contains: Flow IDs, investigation steps, decision matrix, approval section
+
+═════════════════════════════════════════════════════════════════════════════
+
+CRITICAL TIMELINE
+═════════════════════════════════════════════════════════════════════════════
+
+RIGHT NOW (2026-05-20):
+  □ Read this file (you're reading it!)
+  □ Read EXECUTIVE-SUMMARY.md
+  □ Share with stakeholders
+  □ Get approvals
+
+TODAY (Phase 1):
+  □ Identify 5 blocking Flows (1-2 hours)
+  □ Document each Flow's purpose
+  □ Get approval to delete
+
+TOMORROW (Phase 2):
+  □ Deactivate Flows (30 min)
+  □ Start 48-hour monitoring
+
+DAY 3:
+  □ Monitor for issues (1 check)
+
+DAY 4 MORNING:
+  □ Confirm 48-hour stability OK
+
+DAY 4 AFTERNOON:
+  □ Delete Flows (30 min)
+  □ Deploy destructive changes (15 min)
+  □ Validate cleanup (30 min)
+  □ CLEANUP COMPLETE! ✓
+
+═════════════════════════════════════════════════════════════════════════════
+
+APPROVAL CHECKLIST
+═════════════════════════════════════════════════════════════════════════════
+
+REQUIRED BEFORE PHASE 2 BEGINS:
+
+  [ ] Tech Lead reviewed plan
+  [ ] Tech Lead approved approach
+  [ ] Product Owner approved Flow deletions
+  [ ] Salesforce Admin confirmed org stability
+  [ ] DevOps Lead confirmed readiness
+  [ ] Backup strategy confirmed available
+
+═════════════════════════════════════════════════════════════════════════════
+
+WHAT GETS DELETED
+═════════════════════════════════════════════════════════════════════════════
+
+Apex Classes:
+  ✓ FreteHandler       →  DELETE (has FreightHandler replacement)
+  ✓ MargemHandler      →  DELETE (has MarginHandler replacement)
+  ✓ ImpostoHandler     →  DELETE (has TaxHandler replacement)
+
+Apex Triggers:
+  ✓ FreteTrigger       →  DELETE (has FreightTrigger replacement)
+  ✓ MargemTrigger      →  DELETE (has MarginTrigger replacement)
+  ✓ ImpostoTrigger     →  DELETE (has TaxTrigger replacement)
+
+Custom Objects:
+  ✓ Frete__c           →  DELETE (has Freight__c replacement)
+  ✓ Margem__c          →  DELETE (has Margin__c replacement)
+  ✓ Imposto__c         →  DELETE (has Tax__c replacement)
+
+Flows (5 total):
+  ✓ 301ak000027quXJ    →  DELETE
+  ✓ 301ak000027pSgN    →  DELETE
+  ✓ 301ak000027n5Po    →  DELETE
+  ✓ 301ak000027oUUI    →  DELETE
+  ✓ 301ak000027q34s    →  DELETE
+
+═════════════════════════════════════════════════════════════════════════════
+
+WHAT STAYS (NEW ENGLISH OBJECTS)
+═════════════════════════════════════════════════════════════════════════════
+
+Apex Classes:
+  ✓ FreightHandler     ← WORKING NOW
+  ✓ MarginHandler      ← WORKING NOW
+  ✓ TaxHandler         ← WORKING NOW
+
+Apex Triggers:
+  ✓ FreightTrigger     ← WORKING NOW
+  ✓ MarginTrigger      ← WORKING NOW
+  ✓ TaxTrigger         ← WORKING NOW
+
+Custom Objects:
+  ✓ Freight__c         ← WORKING NOW
+  ✓ Margin__c          ← WORKING NOW
+  ✓ Tax__c             ← WORKING NOW
+
+═════════════════════════════════════════════════════════════════════════════
+
+RISKS (EXECUTIVE SUMMARY)
+═════════════════════════════════════════════════════════════════════════════
+
+8 Major Risks Identified:
+
+  RISK 1: Flows can't be deleted
+    Level: MEDIUM
+    Fix:   Use Metadata API or contact Salesforce Support
+
+  RISK 2: Unexpected object dependencies
+    Level: MEDIUM
+    Fix:   Dry-run catches this, won't deploy if found
+
+  RISK 3: Integration breaks during Phase 2
+    Level: MEDIUM
+    Fix:   48-hour monitoring detects, reactivate if needed
+
+  RISK 4: Data still in old objects
+    Level: LOW
+    Fix:   Query before deployment, delete records if found
+
+  RISK 5: Permission sets reference old objects
+    Level: LOW
+    Fix:   Deployment fails with clear error, easy to fix
+
+  RISK 6: Handler not registered in TriggerMaestro
+    Level: LOW
+    Fix:   Code review already verified, not a risk
+
+  RISK 7: Batch jobs reference old objects
+    Level: LOW
+    Fix:   Code search found none, not a risk
+
+  RISK 8: Need rollback after deployment
+    Level: VERY LOW (but possible)
+    Fix:   Salesforce backup restore (last resort)
+
+  OVERALL RISK LEVEL: LOW-MEDIUM ← Confidence: HIGH
+
+═════════════════════════════════════════════════════════════════════════════
+
+FREQUENTLY ASKED QUESTIONS
+═════════════════════════════════════════════════════════════════════════════
+
+Q: Can we skip the 48-hour monitoring window?
+A: Not recommended. Minimum 24 hours to catch integration issues.
+
+Q: What if a Flow can't be deleted?
+A: Use Metadata API, or contact Salesforce Support. Rare but possible.
+
+Q: What if dry-run fails?
+A: Don't proceed. Fix the issue, re-test dry-run, then deploy.
+
+Q: How do we rollback if something breaks?
+A: Salesforce automatic backup. Last resort (data integrity risk).
+
+Q: Will users be impacted?
+A: No. New objects already in use. Cleanup runs in background.
+
+Q: What if all Flows are business-critical?
+A: Recreate them with new English objects first, then proceed.
+
+See EXECUTIVE-SUMMARY.md for more FAQ.
+
+═════════════════════════════════════════════════════════════════════════════
+
+NEXT IMMEDIATE ACTIONS
+═════════════════════════════════════════════════════════════════════════════
+
+RIGHT NOW (Next 5 minutes):
+  1. Finish reading this file
+  2. Open EXECUTIVE-SUMMARY.md
+  3. Read it completely (5 minutes)
+
+THEN (Next 15 minutes):
+  1. Share EXECUTIVE-SUMMARY.md with Tech Lead
+  2. Share with Product Owner
+  3. Schedule approval meeting if needed
+
+THEN (Today, before EOD):
+  1. Get all approvals documented
+  2. Begin Phase 1 investigation
+  3. Document findings in BLOCKING-FLOWS.md
+
+═════════════════════════════════════════════════════════════════════════════
+
+DOCUMENT LOCATIONS
+═════════════════════════════════════════════════════════════════════════════
+
+All planning documents are in:
+  /Users/grupotaak/Documents/ProjetoPricing/.agent-output/
+
+Files:
+  ✓ 00-START-HERE.txt (this file)
+  ✓ EXECUTIVE-SUMMARY.md
+  ✓ README.md
+  ✓ cleanup-summary.md
+  ✓ cleanup-plan.md
+  ✓ devops-commands.sh
+  ✓ risk-assessment.md
+  ✓ BLOCKING-FLOWS.md
+
+═════════════════════════════════════════════════════════════════════════════
+
+CONTACT & SUPPORT
+═════════════════════════════════════════════════════════════════════════════
+
+Questions? Check these in order:
+  1. EXECUTIVE-SUMMARY.md (FAQ section)
+  2. cleanup-plan.md (detailed procedures)
+  3. risk-assessment.md (contingency plans)
+  4. Contact: allanweb12@gmail.com
+
+═════════════════════════════════════════════════════════════════════════════
+
+FINAL CHECKLIST BEFORE STARTING
+═════════════════════════════════════════════════════════════════════════════
+
+  [ ] Read 00-START-HERE.txt (this file)
+  [ ] Read EXECUTIVE-SUMMARY.md
+  [ ] Understand 4-day timeline
+  [ ] Understand 5 phases
+  [ ] Understand key risks
+  [ ] Share with decision makers
+  [ ] Get all approvals documented
+  [ ] Schedule Phase 1 investigation
+  [ ] Assign owners/roles
+  [ ] Backup plan confirmed available
+  [ ] Ready to execute!
+
+═════════════════════════════════════════════════════════════════════════════
+
+SUCCESS LOOKS LIKE
+═════════════════════════════════════════════════════════════════════════════
+
+After cleanup completes (4 days from start):
+
+  ✓ Old Portuguese objects gone from org
+  ✓ All 5 blocking Flows deleted
+  ✓ New English objects fully functional
+  ✓ All tests passing
+  ✓ Integration Logs clean
+  ✓ Orders processing with new objects
+  ✓ Team confident in system
+  ✓ Migration cleanup complete!
+
+═════════════════════════════════════════════════════════════════════════════
+
+YOU'RE READY!
+
+Next step: Open EXECUTIVE-SUMMARY.md and read it (5 minutes).
+
+═════════════════════════════════════════════════════════════════════════════

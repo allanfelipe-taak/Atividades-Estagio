@@ -82,19 +82,19 @@ public with sharing class TemplateDefaultFields {
 
     public class MargemDefaults implements FieldDefaults {
         public Map<String, Object> getFieldDefaults(Decimal count) {
-            return new Map<String, Object>{ 'Status__c' => 'Aprovado' };
+            return new Map<String, Object>{ 'Status__c' => 'Approved' };
         }
     }
 
     public class FreteDefaults implements FieldDefaults {
         public Map<String, Object> getFieldDefaults(Decimal count) {
-            return new Map<String, Object>{ 'Status__c' => 'Aprovado' };
+            return new Map<String, Object>{ 'Status__c' => 'Approved' };
         }
     }
 
     public class ImpostoDefaults implements FieldDefaults {
         public Map<String, Object> getFieldDefaults(Decimal count) {
-            return new Map<String, Object>{ 'Status__c' => 'Aprovado' };
+            return new Map<String, Object>{ 'Status__c' => 'Approved' };
         }
     }
     

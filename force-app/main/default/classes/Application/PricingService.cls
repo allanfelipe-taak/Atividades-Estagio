@@ -1,124 +1,129 @@
 public with sharing class PricingService {
-   
-    public void processarPricing(List<OrderItem> itensOriginais) {
+
+    public void processPricing(List<OrderItem> originalItems) {
         Set<Id> orderIds = new Set<Id>();
         Set<Id> productIds = new Set<Id>();
 
-        for (OrderItem oi : itensOriginais) {
+        for (OrderItem oi : originalItems) {
             if (oi.OrderId != null) orderIds.add(oi.OrderId);
             if (oi.Product2Id != null) productIds.add(oi.Product2Id);
         }
 
-        Map<Id, Order> mapPedidos = new Map<Id, Order>([
-            SELECT Id, AccountId, ShippingCity, ShippingState, ShippingCountry, 
-                   Centro_Distribuicao__c, Endereco__c 
-            FROM Order 
+        Map<Id, Order> orderMap = new Map<Id, Order>([
+            SELECT Id, AccountId, ShippingCity, ShippingState, ShippingCountry,
+                   DistributionCenter__c, Address__c
+            FROM Order
             WHERE Id IN :orderIds
         ]);
 
-       // 2. CORREÇÃO AQUI: Adicionado Custo_Producao__c E Name no SELECT 👇
-        Map<Id, Product2> mapProdutos = new Map<Id, Product2>([
-            SELECT Id, Name, Hierarquia_de_Produto__c, Custo_Producao__c 
+       // 2. CORREÇÃO AQUI: Adicionado ProductionCost__c E Name no SELECT 👇
+        Map<Id, Product2> productMap = new Map<Id, Product2>([
+            SELECT Id, Name, ProductHierarchy__c, ProductionCost__c
             FROM Product2
             WHERE Id IN :productIds
         ]);
 
         Set<Id> accountIds = new Set<Id>();
-        Set<String> cidades = new Set<String>();
-        Set<String> estados = new Set<String>();
-        Set<String> paises = new Set<String>();
-        Set<Id> hierarquiaIds = new Set<Id>();
+        Set<String> cities = new Set<String>();
+        Set<String> states = new Set<String>();
+        Set<String> countries = new Set<String>();
+        Set<Id> hierarchyIds = new Set<Id>();
 
-        for (Order ped : mapPedidos.values()) {
-            if (ped.AccountId != null) accountIds.add(ped.AccountId);
-            if (ped.ShippingCity != null) cidades.add(ped.ShippingCity);
-            if (ped.ShippingState != null) estados.add(ped.ShippingState);
-            if (ped.ShippingCountry != null) paises.add(ped.ShippingCountry);
+        for (Order order : orderMap.values()) {
+            if (order.AccountId != null) accountIds.add(order.AccountId);
+            if (order.ShippingCity != null) cities.add(order.ShippingCity);
+            if (order.ShippingState != null) states.add(order.ShippingState);
+            if (order.ShippingCountry != null) countries.add(order.ShippingCountry);
         }
 
-        for (Product2 prod : mapProdutos.values()) {
-            if (prod.Hierarquia_de_Produto__c != null) {
-                hierarquiaIds.add(prod.Hierarquia_de_Produto__c);
+        for (Product2 product : productMap.values()) {
+            if (product.ProductHierarchy__c != null) {
+                hierarchyIds.add(product.ProductHierarchy__c);
             }
         }
 
-        List<Margem__c> margens = PricingSelector.buscarMargens(productIds, accountIds, new Set<Id>(), hierarquiaIds);
-        List<Imposto__c> impostos = PricingSelector.buscarImpostos(productIds, estados, paises);
-        List<Frete__c> fretes = PricingSelector.buscarFretes(productIds, hierarquiaIds, cidades, estados, paises);
+        List<Margin__c> margins = PricingSelector.searchMargins(productIds, accountIds, new Set<Id>(), hierarchyIds);
+        List<Tax__c> taxes = PricingSelector.searchTaxes(productIds, states, countries);
+        List<Freight__c> freights = PricingSelector.searchFreights(productIds, hierarchyIds, cities, states, countries);
 
-        for (OrderItem itemOriginal : itensOriginais) {
-            Order pedidoRelacionado = mapPedidos.get(itemOriginal.OrderId);
-            if (pedidoRelacionado == null) continue;
+        for (OrderItem originalItem : originalItems) {
+            Order relatedOrder = orderMap.get(originalItem.OrderId);
+            if (relatedOrder == null) continue;
 
-            itemOriginal.Order = pedidoRelacionado; 
-            
-            if (mapProdutos.containsKey(itemOriginal.Product2Id)) {
+            originalItem.Order = relatedOrder;
+
+            if (productMap.containsKey(originalItem.Product2Id)) {
                 // VINCULAR O PRODUTO COMPLETO (COM CUSTO) AO ITEM
-                itemOriginal.Product2 = mapProdutos.get(itemOriginal.Product2Id);
+                originalItem.Product2 = productMap.get(originalItem.Product2Id);
             }
 
-            
-            PricingItem entity = new PricingItem(itemOriginal);
-            
-            Margem__c melhorMargem = (Margem__c) encontrarMelhorParametro(margens, entity);
-            Frete__c melhorFrete = (Frete__c) encontrarMelhorParametro(fretes, entity);
-            Imposto__c melhorImposto = (Imposto__c) encontrarMelhorParametro(impostos, entity);
 
-            if (melhorMargem != null) {
-                System.debug('[MOTOR] MARGEM: ' + melhorMargem.Name + ' | Peso: ' + entity.calcularPeso(melhorMargem));
+            PricingItem entity = new PricingItem(originalItem);
+
+            Margin__c bestMargin = (Margin__c) findBestParameter(margins, entity);
+            Freight__c bestFreight = (Freight__c) findBestParameter(freights, entity);
+            Tax__c bestTax = (Tax__c) findBestParameter(taxes, entity);
+
+            if (bestMargin != null) {
+                System.debug('[MOTOR] MARGEM: ' + bestMargin.Name + ' | Peso: ' + entity.calculateWeight(bestMargin));
             }
-            if (melhorFrete != null) {
-                System.debug(' [MOTOR] FRETE: ' + melhorFrete.Name + ' | Peso: ' + entity.calcularPeso(melhorFrete));
+            if (bestFreight != null) {
+                System.debug(' [MOTOR] FRETE: ' + bestFreight.Name + ' | Peso: ' + entity.calculateWeight(bestFreight));
             }
-            if (melhorImposto != null) {
-                System.debug('[MOTOR] IMPOSTO: ' + melhorImposto.Name + ' | Peso: ' + entity.calcularPeso(melhorImposto));
+            if (bestTax != null) {
+                System.debug('[MOTOR] IMPOSTO: ' + bestTax.Name + ' | Peso: ' + entity.calculateWeight(bestTax));
             }
 
-            if (melhorMargem != null && melhorFrete != null && melhorImposto != null) {
-                entity.margem = melhorMargem.Valor__c;
-                entity.frete = melhorFrete.Valor__c;
-                entity.imposto = melhorImposto.Imposto_sobre_custo__c;
+            if (bestMargin != null && bestFreight != null && bestTax != null) {
+                entity.margin = bestMargin.Value__c;
+                entity.freight = bestFreight.Value__c;
+                entity.tax = bestTax.TaxOnCost__c;
 
-                entity.aplicarCalculoFinal();
-                
-                itemOriginal.UnitPrice = entity.record.UnitPrice; 
-                itemOriginal.Valor_Frete__c = melhorFrete.Valor__c;
-                itemOriginal.Porcentagem_Imposto__c = melhorImposto.Imposto_sobre_custo__c;
-                itemOriginal.Porcentagem_Margem__c = melhorMargem.Valor__c;
-                
+                entity.applyFinalCalculation();
+
+                originalItem.UnitPrice = entity.record.UnitPrice;
+                originalItem.FreightValue__c = bestFreight.Value__c;
+                originalItem.TaxPercentage__c = bestTax.TaxOnCost__c;
+                originalItem.MarginPercentage__c = bestMargin.Value__c;
+                originalItem.Discount__c = entity.record.Discount__c;
+                originalItem.PriceWithoutMargin__c = entity.record.PriceWithoutMargin__c;
+                originalItem.FinalPrice__c = entity.record.FinalPrice__c;
+                originalItem.ProductionCost__c = entity.record.ProductionCost__c;
+                originalItem.LastCalculationDate__c = entity.record.LastCalculationDate__c;
+
             } else {
-                itemOriginal.addError('Não está autorizada a venda deste produto devido à falta de parâmetros. Contate o time de Pricing.');
+                originalItem.addError('Não está autorizada a venda deste produto devido à falta de parâmetros. Contate o time de Pricing.');
             }
         } 
     }
 
    
 
-    private SObject encontrarMelhorParametro(List<SObject> candidatos, PricingItem entity) {
-        SObject vencedor = null;
-        Integer maiorPeso = -1;
+    private SObject findBestParameter(List<SObject> candidates, PricingItem entity) {
+        SObject winner = null;
+        Integer highestWeight = -1;
 
-        for (SObject cand : candidatos) {
-            Integer pesoAtual = entity.calcularPeso(cand);
-            if (pesoAtual > maiorPeso) {
-                maiorPeso = pesoAtual;
-                vencedor = cand;
+        for (SObject candidate : candidates) {
+            Integer currentWeight = entity.calculateWeight(candidate);
+            if (currentWeight > highestWeight) {
+                highestWeight = currentWeight;
+                winner = candidate;
             }
         }
-        return vencedor;
+        return winner;
     }
 
-    
+
     @AuraEnabled // Isso permite que o JavaScript enxergue esse método
-    public static void recalcular(Id orderId) {
+    public static void recalculate(Id orderId) {
         // Busca os itens
-        List<OrderItem> itens = [SELECT Id FROM OrderItem WHERE OrderId = :orderId];
-        
+        List<OrderItem> items = [SELECT Id FROM OrderItem WHERE OrderId = :orderId];
+
         // Faz o "touch" (atualiza os registros para disparar sua Trigger)
-        update itens; 
-        
+        update items;
+
         // Atualiza o checkbox do pedido para sumir o aviso
-        update new Order(Id = orderId, Precos_Recalculados__c = true);
+        update new Order(Id = orderId, PricesRecalculated__c = true);
     }
    
 }

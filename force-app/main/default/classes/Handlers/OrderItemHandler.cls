@@ -1,48 +1,48 @@
 /** * Handler é responsavel por filtrar os eventos do Produto e do Pedido 
  * e direcionar para o PricingService
  */
-public with sharing class OrderItemHandler implements ContratoTrigger {
+public with sharing class OrderItemHandler implements ContractTrigger {
 
     public void beforeInsert(List<SObject> newRecords) {
-        validarItens((List<OrderItem>) newRecords);
+        validateItems((List<OrderItem>) newRecords);
         // MOVIDO PARA O BEFORE: Aqui o registro NÃO é read-only
-        new PricingService().processarPricing((List<OrderItem>) newRecords);
+        new PricingService().processPricing((List<OrderItem>) newRecords);
     }
 
     public void beforeUpdate(List<SObject> newRecords, Map<Id, SObject> oldRecords) {
-        validarItens((List<OrderItem>) newRecords);
-        validarPedidoAtivo((List<OrderItem>) newRecords, (Map<Id, OrderItem>) oldRecords);
-        
-        
-        List<OrderItem> itensParaRecalcular = new List<OrderItem>();
-        for (OrderItem novo : (List<OrderItem>) newRecords) {
-            
-                itensParaRecalcular.add(novo);
-            
+        validateItems((List<OrderItem>) newRecords);
+        validateActiveOrder((List<OrderItem>) newRecords, (Map<Id, OrderItem>) oldRecords);
+
+
+        List<OrderItem> itemsToRecalculate = new List<OrderItem>();
+        for (OrderItem newItem : (List<OrderItem>) newRecords) {
+
+                itemsToRecalculate.add(newItem);
+
         }
-        if (!itensParaRecalcular.isEmpty()) {
-            new PricingService().processarPricing(itensParaRecalcular);
+        if (!itemsToRecalculate.isEmpty()) {
+            new PricingService().processPricing(itemsToRecalculate);
         }
     }
 
     // --- MÉTODOS DE VALIDAÇÃO ---
 
-    private void validarItens(List<OrderItem> itens) {
-        for (OrderItem item : itens) {
+    private void validateItems(List<OrderItem> items) {
+        for (OrderItem item : items) {
             if (item.Quantity <= 0) {
                 item.addError('A quantidade deve ser maior que zero.');
             }
         }
     }
 
-    private void validarPedidoAtivo(List<OrderItem> itens, Map<Id, OrderItem> oldMap) {
+    private void validateActiveOrder(List<OrderItem> items, Map<Id, OrderItem> oldMap) {
         Set<Id> orderIds = new Set<Id>();
-        for(OrderItem oi : itens) orderIds.add(oi.OrderId);
-        
-        Map<Id, Order> mapPedidos = new Map<Id, Order>([SELECT Id, Status FROM Order WHERE Id IN :orderIds]);
+        for(OrderItem oi : items) orderIds.add(oi.OrderId);
 
-        for (OrderItem item : itens) {
-            if (mapPedidos.containsKey(item.OrderId) && mapPedidos.get(item.OrderId).Status == 'Activated') {
+        Map<Id, Order> orderMap = new Map<Id, Order>([SELECT Id, Status FROM Order WHERE Id IN :orderIds]);
+
+        for (OrderItem item : items) {
+            if (orderMap.containsKey(item.OrderId) && orderMap.get(item.OrderId).Status == 'Activated') {
                 item.addError('Não é permitido modificar itens de um pedido que já está Ativo.');
             }
         }

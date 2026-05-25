@@ -3,7 +3,7 @@
 
 public with sharing class TriggerMaestro {
     
-    public static void executa(ContratoTrigger handler){
+    public static void execute(ContractTrigger handler){
 
         //Verificar o tipo de operação que o Salesforce está executando agora
 

@@ -68,8 +68,8 @@ public with sharing class CalloutOrder {
 	public static List<Order> getOrders(List<String> orderIdList) {
 		return [
 			SELECT	Id, ExternalId__c, Account.ExternalId__c, Pricebook2.ExternalId__c,
-			Endereco__r.ExternalId__c,Tipo_Frete__c,
-							   Centro_Distribuicao__r.ExternalId__c,Condicao_Pagamento__r.ExternalId__c,
+			Address__r.ExternalId__c,FreightType__c,
+							   DistributionCenter__r.ExternalId__c,PaymentTerm__r.ExternalId__c,
 							   EffectiveDate,DeliveryDate__c,
 							   Status,
 					(

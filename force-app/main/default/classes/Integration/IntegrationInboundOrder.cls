@@ -13,7 +13,7 @@ global with sharing class IntegrationInboundOrder {
 		List<Order> orderToUpsertList = new List<Order>();
 		List<String> orderExternalIdList = new List<String>();
 		Map<String, String> orderExternalIdToOrderItem = new Map<String, String>();
-		List<DataIntegrationFields.ResponseParent> orderResponseList = new List<DataIntegrationFields.ResponseParent>();
+		List<DataIntegrationFields.Response> orderResponseList = new List<DataIntegrationFields.Response>();
 		Map<String, List<DataIntegrationFields.Response>> orderItemResponseList = new Map<String, List<DataIntegrationFields.Response>>();
 		List<DataIntegrationFields.OrderItemINData> orderItemToUpsertList = new List<DataIntegrationFields.OrderItemINData>();
 		String integrationLogId;
@@ -21,8 +21,14 @@ global with sharing class IntegrationInboundOrder {
 		try {
 			orderItemToUpsertList = fillOrderItemListToUpsert(orderRequestList, orderExternalIdToOrderItem);
 
+			// Converter List<OrderINData> para List<FieldData> devido à covariância de tipos no Apex
+			List<DataIntegrationFields.FieldData> fieldDataList = new List<DataIntegrationFields.FieldData>();
+			for (DataIntegrationFields.OrderINData orderData : orderRequestList) {
+				fieldDataList.add(orderData);
+			}
+
 			FactoryDataIntegration.convertSObject(
-				new Order(), 'IN', orderRequestList, orderResponseList, orderToUpsertList, orderExternalIdList
+				new Order(), 'IN', fieldDataList, orderResponseList, orderToUpsertList, orderExternalIdList
 			);
 
 			IntegrationUtils.upsertRecords(
@@ -142,26 +148,30 @@ global with sharing class IntegrationInboundOrder {
 	}
 
 	public static Boolean fillResponseList(
-		List<DataIntegrationFields.ResponseParent> orderResponseList,
+		List<DataIntegrationFields.Response> orderResponseList,
 		Map<String, List<DataIntegrationFields.Response>> orderItemResponseList
 	) {
 		Boolean hasAnyError = false;
 
-		for (DataIntegrationFields.ResponseParent response : orderResponseList) {
-			response.items = new List<DataIntegrationFields.Response>();
+		for (DataIntegrationFields.Response response : orderResponseList) {
+			// Cast ao tipo específico ResponseParent para acessar propriedade items
+			if (response instanceOf DataIntegrationFields.ResponseParent) {
+				DataIntegrationFields.ResponseParent responseParent = (DataIntegrationFields.ResponseParent)response;
+				responseParent.items = new List<DataIntegrationFields.Response>();
 
-			if (orderItemResponseList.containsKey(response.externalId)) {
-				response.items.addAll(orderItemResponseList.get(response.externalId));
-			}
-			else if (orderItemResponseList.containsKey(response.salesforceId))
-				response.items.addAll(orderItemResponseList.get(response.salesforceId));
+				if (orderItemResponseList.containsKey(responseParent.externalId)) {
+					responseParent.items.addAll(orderItemResponseList.get(responseParent.externalId));
+				}
+				else if (orderItemResponseList.containsKey(responseParent.salesforceId))
+					responseParent.items.addAll(orderItemResponseList.get(responseParent.salesforceId));
 
-			if (response.hasError) hasAnyError = true;
-			else {
-				for (DataIntegrationFields.Response responseItems : response.items) {
-					if (responseItems.hasError) {
-						hasAnyError = true;
-						break;
+				if (responseParent.hasError) hasAnyError = true;
+				else {
+					for (DataIntegrationFields.Response responseItems : responseParent.items) {
+						if (responseItems.hasError) {
+							hasAnyError = true;
+							break;
+						}
 					}
 				}
 			}
@@ -170,29 +180,33 @@ global with sharing class IntegrationInboundOrder {
 		return hasAnyError;
 	}
 
-	public static String getErrors(List<DataIntegrationFields.ResponseParent> orderResponseList) {
+	public static String getErrors(List<DataIntegrationFields.Response> orderResponseList) {
 		String errorMessage = '';
 
-		for (DataIntegrationFields.ResponseParent orderResponse : orderResponseList) {
-			Boolean hasError = false;
-			String currentErrorMessage = '';
+		for (DataIntegrationFields.Response response : orderResponseList) {
+			// Cast ao tipo específico ResponseParent para acessar propriedade items
+			if (response instanceOf DataIntegrationFields.ResponseParent) {
+				DataIntegrationFields.ResponseParent orderResponse = (DataIntegrationFields.ResponseParent)response;
+				Boolean hasError = false;
+				String currentErrorMessage = '';
 
-			if (orderResponse.hasError) {
-				errorMessage += orderResponse.errorMessage + '. ';
-			}
-
-			for (DataIntegrationFields.Response item : orderResponse.items) {
-				if (item.hasError) {
-					errorMessage += item.errorMessage + '. ';
-					currentErrorMessage += item.errorMessage + '. ';
-					hasError = true;
+				if (orderResponse.hasError) {
+					errorMessage += orderResponse.errorMessage + '. ';
 				}
-			}
 
-			orderResponse.hasError = hasError;
-			orderResponse.errorMessage = orderResponse.errorMessage == null ?
-				currentErrorMessage :
-				orderResponse.errorMessage + '. ' + currentErrorMessage;
+				for (DataIntegrationFields.Response item : orderResponse.items) {
+					if (item.hasError) {
+						errorMessage += item.errorMessage + '. ';
+						currentErrorMessage += item.errorMessage + '. ';
+						hasError = true;
+					}
+				}
+
+				orderResponse.hasError = hasError;
+				orderResponse.errorMessage = orderResponse.errorMessage == null ?
+					currentErrorMessage :
+					orderResponse.errorMessage + '. ' + currentErrorMessage;
+			}
 		}
 
 		return errorMessage;

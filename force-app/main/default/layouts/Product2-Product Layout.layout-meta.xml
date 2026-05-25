@@ -16,11 +16,11 @@
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
-                <field>Custo_Producao__c</field>
+                <field>ProductionCost__c</field>
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
-                <field>Hierarquia_de_Produto__c</field>
+                <field>ProductHierarchy__c</field>
             </layoutItems>
         </layoutColumns>
         <layoutColumns>
@@ -83,19 +83,15 @@
     </relatedLists>
     <relatedLists>
         <fields>NAME</fields>
-        <relatedList>Frete__c.Product__c</relatedList>
+        <relatedList>Freight__c.Product__c</relatedList>
     </relatedLists>
     <relatedLists>
         <fields>NAME</fields>
-        <relatedList>Margem__c.Produto__c</relatedList>
+        <relatedList>Margin__c.Product__c</relatedList>
     </relatedLists>
     <relatedLists>
         <fields>NAME</fields>
-        <relatedList>Frete__c.Produto__c</relatedList>
-    </relatedLists>
-    <relatedLists>
-        <fields>NAME</fields>
-        <relatedList>Imposto__c.Produto__c</relatedList>
+        <relatedList>Tax__c.Product__c</relatedList>
     </relatedLists>
     <showEmailCheckbox>false</showEmailCheckbox>
     <showHighlightsPanel>false</showHighlightsPanel>

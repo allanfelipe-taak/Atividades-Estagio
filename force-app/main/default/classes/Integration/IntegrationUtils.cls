@@ -4,7 +4,7 @@ public with sharing class IntegrationUtils {
 	}
 
 	// Records upsert validation, adding results to the response list
-	public static Boolean upsertRecords(List<Database.UpsertResult> upsertResults, List<DataIntegrationFields.ResponseParent> responseList,
+	public static Boolean upsertRecords(List<Database.UpsertResult> upsertResults, List<DataIntegrationFields.Response> responseList,
 										List<SObject> sobjectListToUpsert, Schema.SObjectField field) {
 		Boolean hasError = false;
 		for (DataIntegrationFields.Response response : responseList) hasError = response.hasError;

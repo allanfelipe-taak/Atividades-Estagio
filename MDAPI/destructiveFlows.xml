@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>Frete_Desmarcar_Recalculo_no_Pedido</members>
+        <members>Imposto_Desmarcar_Recalculo_no_Pedido</members>
+        <members>Margem_Desmarcar_Recalculo_no_Pedido</members>
+        <name>Flow</name>
+    </types>
+    <version>66.0</version>
+</Package>

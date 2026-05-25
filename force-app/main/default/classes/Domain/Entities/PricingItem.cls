@@ -1,59 +1,61 @@
 public with sharing class PricingItem {
 
     public OrderItem record {get; private set;}
-    public Decimal custoProducao {get; set;}
-    public Decimal frete {get; set;}
-    public Decimal imposto {get; set;}
-    public Decimal margem {get; set;}
+    public Decimal productionCost {get; set;}
+    public Decimal freight {get; set;}
+    public Decimal tax {get; set;}
+    public Decimal margin {get; set;}
 
-    public PricingItem(OrderItem item) {
-        this.record = item;
-        
-        // o custo direto do produto para o cálculo ser real
-       if(item.Product2.Custo_Producao__c == null) {
-    throw new PricingException('Erro: O produto ' + item.Product2.Name + ' não tem custo cadastrado!');
-}
+public PricingItem(OrderItem item) {
+    this.record = item;
+
+    if(item.Product2.ProductionCost__c == null) {
+        throw new PricingException('Erro: O produto ' + item.Product2.Name + ' não tem custo cadastrado!');
     }
 
+    //  Guarda o custo na propriedade da classe!
+    this.productionCost = item.Product2.ProductionCost__c;
+}
+
     
 
     
     
-    public Integer calcularPeso(SObject parametro) {
-    Integer peso = 0;
-    
+    public Integer calculateWeight(SObject parameter) {
+    Integer weight = 0;
+
     // Pega os campos de forma segura (sem precisar de try-catch!)
-    Map<String, Object> campos = parametro.getPopulatedFieldsAsMap();
+    Map<String, Object> fields = parameter.getPopulatedFieldsAsMap();
 
     // --- 3. CATEGORIA LOCALIDADE (Valores Baixos: 1 a 100) ---
-    if (campos.containsKey('Pais__c') && parametro.get('Pais__c') != null) {
-        peso += 1;
+    if (fields.containsKey('Country__c') && parameter.get('Country__c') != null) {
+        weight += 1;
     }
-    if (campos.containsKey('Estado__c') && parametro.get('Estado__c') != null) {
-        peso += 10;
+    if (fields.containsKey('State__c') && parameter.get('State__c') != null) {
+        weight += 10;
     }
-    if (campos.containsKey('Cidade__c') && parametro.get('Cidade__c') != null) {
-        peso += 100;
+    if (fields.containsKey('City__c') && parameter.get('City__c') != null) {
+        weight += 100;
     }
 
     // --- 2. CATEGORIA CLIENTES (Valores Médios: 1.000 a 10.000) ---
-    if (campos.containsKey('Grupo_de_Conta__c') && parametro.get('Grupo_de_Conta__c') != null) {
-        peso += 1000;
+    if (fields.containsKey('AccountGroup__c') && parameter.get('AccountGroup__c') != null) {
+        weight += 1000;
     }
-    if (campos.containsKey('Conta__c') && parametro.get('Conta__c') != null) {
-        peso += 10000;
+    if (fields.containsKey('Account__c') && parameter.get('Account__c') != null) {
+        weight += 10000;
     }
 
     // --- 1. CATEGORIA PRODUTOS (Valores Gigantes: 100.000 a 1.000.000) ---
-    // Corrigido para "Hierarquia_de_Produto__c"
-    if (campos.containsKey('Hierarquia_de_Produto__c') && parametro.get('Hierarquia_de_Produto__c') != null) {
-        peso += 100000;
+    // Corrigido para "ProductHierarchy__c"
+    if (fields.containsKey('ProductHierarchy__c') && parameter.get('ProductHierarchy__c') != null) {
+        weight += 100000;
     }
-    if (campos.containsKey('Produto__c') && parametro.get('Produto__c') != null) {
-        peso += 1000000; // 👑 O REI
+    if (fields.containsKey('Product__c') && parameter.get('Product__c') != null) {
+        weight += 1000000; // 👑 O REI
     }
 
-    return peso;
+    return weight;
 }
 
     
@@ -61,37 +63,37 @@ public with sharing class PricingItem {
     // FÓRMULA OBRIGATÓRIA E PERSISTÊNCIA (AUDITORIA) 
     
     
-    public void aplicarCalculoFinal() {
-        Decimal c = (custoProducao != null) ? custoProducao : 0;
-        Decimal f = (frete != null) ? frete : 0;
-        Decimal i = (imposto != null) ? imposto / 100 : 0;
-        Decimal m = (margem != null) ? margem / 100 : 0;
+    public void applyFinalCalculation() {
+        Decimal c = (productionCost != null) ? productionCost : 0;
+        Decimal f = (freight != null) ? freight : 0;
+        Decimal i = (tax != null) ? tax / 100 : 0;
+        Decimal m = (margin != null) ? margin / 100 : 0;
 
         // Fórmula: (Custo + Frete) * (1 + Imposto) * (1 + Margem)
-        Decimal precoSemMargem = (c + f) * (1 + i);
-        Decimal precoSugerido = precoSemMargem * (1 + m);
-        
+        Decimal priceWithoutMargin = (c + f) * (1 + i);
+        Decimal suggestedPrice = priceWithoutMargin * (1 + m);
+
         // Se o UnitPrice vier zerado (nova inserção), usamos o sugerido
         if (this.record.UnitPrice == null || this.record.UnitPrice <= 0) {
-            this.record.UnitPrice = precoSugerido;
+            this.record.UnitPrice = suggestedPrice;
         }
 
-        if (precoSugerido > 0) {
+        if (suggestedPrice > 0) {
             // Se o UnitPrice for menor que o sugerido, teremos um desconto positivo.
-            this.record.Desconto__c = ((precoSugerido - this.record.UnitPrice) / precoSugerido) * 100;
+            this.record.Discount__c = ((suggestedPrice - this.record.UnitPrice) / suggestedPrice) * 100;
         }
 
         // --- NOVIDADE: CARIMBO DE DATA PARA O AVISO INTELIGENTE ---
     // Este campo diz ao sistema EXATAMENTE quando o motor rodou.
-    this.record.Data_Ultimo_Calculo__c = System.now();
-        
+    this.record.LastCalculationDate__c = System.now();
+
         // CARIMBO DE AUDITORIA (Não mexa aqui
-        this.record.Custo_Producao__c = c;
-        this.record.Valor_Frete__c = f;
-        this.record.Porcentagem_Imposto__c = (imposto != null ? imposto : 0); 
-        this.record.Porcentagem_Margem__c = (margem != null ? margem : 0);
-        this.record.Preco_sem_Margem__c = precoSemMargem;
-        this.record.Preco_Final__c = precoSugerido; // O valor que o motor queria cobrar
+        this.record.ProductionCost__c = c;
+        this.record.FreightValue__c = f;
+        this.record.TaxPercentage__c = (tax != null ? tax : 0);
+        this.record.MarginPercentage__c = (margin != null ? margin : 0);
+        this.record.PriceWithoutMargin__c = priceWithoutMargin;
+        this.record.FinalPrice__c = suggestedPrice; // O valor que o motor queria cobrar
     }
 
     public class PricingException extends Exception {}

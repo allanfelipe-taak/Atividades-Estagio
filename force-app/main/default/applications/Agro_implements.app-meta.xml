@@ -17,17 +17,17 @@
     <tabs>standard-Order</tabs>
     <tabs>standard-SfdcPartnerProvisionProduct</tabs>
     <tabs>standard-Account</tabs>
-    <tabs>Centro_Distribuicao__c</tabs>
-    <tabs>Margem__c</tabs>
-    <tabs>Frete__c</tabs>
-    <tabs>Imposto__c</tabs>
-    <tabs>Cidade__c</tabs>
-    <tabs>Estado__c</tabs>
-    <tabs>Grupo_de_Conta__c</tabs>
-    <tabs>Hierarquia_de_Produto__c</tabs>
-    <tabs>Condicao_Pagamento__c</tabs>
-    <tabs>Endereco__c</tabs>
-    <tabs>Pais__c</tabs>
+    <tabs>DistributionCenter__c</tabs>
+    <tabs>Margin__c</tabs>
+    <tabs>Freight__c</tabs>
+    <tabs>Tax__c</tabs>
+    <tabs>City__c</tabs>
+    <tabs>State__c</tabs>
+    <tabs>AccountGroup__c</tabs>
+    <tabs>ProductHierarchy__c</tabs>
+    <tabs>PaymentTerm__c</tabs>
+    <tabs>Address__c</tabs>
+    <tabs>Country__c</tabs>
     <uiType>Lightning</uiType>
     <utilityBar>Agro_implements_UtilityBar</utilityBar>
 </CustomApplication>

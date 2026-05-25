@@ -29,14 +29,20 @@ public with sharing class FactoryDataIntegrationTest {
 	@IsTest
 	public static void convertSObjectErrorTest() {
 		List<DataIntegrationFields.OrderINData> orderRequestList = fillOrderINDataListError();
-		List<DataIntegrationFields.ResponseParent> responseList = new List<DataIntegrationFields.ResponseParent>();
+		List<DataIntegrationFields.Response> responseList = new List<DataIntegrationFields.Response>();
 		List<Order> orderToUpsertList = new List<Order>();
+
+		// Converter List<OrderINData> para List<FieldData> devido à covariância de tipos no Apex
+		List<DataIntegrationFields.FieldData> fieldDataList = new List<DataIntegrationFields.FieldData>();
+		for (DataIntegrationFields.OrderINData orderData : orderRequestList) {
+			fieldDataList.add(orderData);
+		}
 
 		Test.startTest();
 			FactoryDataIntegration.convertSObject(
 				new Order(),
 				'IN',
-				orderRequestList,
+				fieldDataList,
 				responseList,
 				orderToUpsertList,
 				new List<String>{ orderRequestList[0].externalId }

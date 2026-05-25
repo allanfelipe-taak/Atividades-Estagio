@@ -2,52 +2,52 @@
  * Essencial para a regra de duplicidade e comparação de registros.
  */
 public class PricingKey {
-    public Id produtoId;
-    public Id contaId;
-    public Id hierarquiaId;
-public Id grupoId;
-public Id paisId;
-    public String estado;
-    public String cidade;
+    public Id productId;
+    public Id accountId;
+    public Id hierarchyId;
+public Id groupId;
+public Id countryId;
+    public String state;
+    public String city;
 
     public PricingKey(SObject record) {
         // Pega o mapa de campos que realmente existem no registro enviado
-        Map<String, Object> campos = record.getPopulatedFieldsAsMap();
+        Map<String, Object> fields = record.getPopulatedFieldsAsMap();
 
-        this.produtoId = (Id) record.get('Produto__c');
-        
+        this.productId = (Id) record.get('Product__c');
+
         // SÓ TENTA PEGAR A CONTA SE O CAMPO EXISTIR (Resolve o erro do Frete)
-        this.contaId = campos.containsKey('Conta__c') ? (Id) record.get('Conta__c') : null;
-        
-        this.estado = campos.containsKey('Estado__c') ? (String) record.get('Estado__c') : null;
-        this.cidade = campos.containsKey('Cidade__c') ? (String) record.get('Cidade__c') : null;
+        this.accountId = fields.containsKey('Account__c') ? (Id) record.get('Account__c') : null;
 
-        this.hierarquiaId = campos.containsKey('Hierarquia_de_Produto__c') ? (Id) record.get ('Hierarquia_de_Produto__c') : null;
-         this.grupoId = campos.containskey ('Grupo_de_Conta__c') ? (Id) record.get('Grupo_de_Conta__c') : null; 
-        this.paisId =   campos.containsKey ('Pais__c')   ?      (Id)record.get('Pais__c') : null;
+        this.state = fields.containsKey('State__c') ? (String) record.get('State__c') : null;
+        this.city = fields.containsKey('City__c') ? (String) record.get('City__c') : null;
+
+        this.hierarchyId = fields.containsKey('ProductHierarchy__c') ? (Id) record.get ('ProductHierarchy__c') : null;
+         this.groupId = fields.containsKey ('AccountGroup__c') ? (Id) record.get('AccountGroup__c') : null;
+        this.countryId =   fields.containsKey ('Country__c')   ?      (Id)record.get('Country__c') : null;
     }
 
     public Boolean equals(Object obj) {
         if (obj instanceof PricingKey) {
             PricingKey other = (PricingKey) obj;
-            return (this.produtoId == other.produtoId && this.contaId == other.contaId && 
-                    this.estado == other.estado && this.cidade == other.cidade &&
-                    this.grupoId == other.grupoId && this.paisId == other.paisId &&
-                    this.hierarquiaId == other.hierarquiaId);
+            return (this.productId == other.productId && this.accountId == other.accountId &&
+                    this.state == other.state && this.city == other.city &&
+                    this.groupId == other.groupId && this.countryId == other.countryId &&
+                    this.hierarchyId == other.hierarchyId);
         }
         return false;
     }
 
     public Integer hashCode() {
         Integer code = 7;
-        code = 31 * code + (produtoId == null ? 0 : String.valueOf(produtoId).hashCode());
-        code = 31 * code + (contaId == null ? 0 : String.valueOf(contaId).hashCode());
-        code = 31 * code + (estado == null ? 0 : estado.hashCode());
-        code = 31 * code + (cidade == null ? 0 : cidade.hashCode());
-        code = 31 * code + (grupoId == null ? 0 : grupoId.hashCode());
-        code = 31 * code + (paisId == null ? 0 : paisId.hashCode());
-        code = 31 * code + (hierarquiaId == null ? 0 : hierarquiaId.hashCode());
-        
+        code = 31 * code + (productId == null ? 0 : String.valueOf(productId).hashCode());
+        code = 31 * code + (accountId == null ? 0 : String.valueOf(accountId).hashCode());
+        code = 31 * code + (state == null ? 0 : state.hashCode());
+        code = 31 * code + (city == null ? 0 : city.hashCode());
+        code = 31 * code + (groupId == null ? 0 : groupId.hashCode());
+        code = 31 * code + (countryId == null ? 0 : countryId.hashCode());
+        code = 31 * code + (hierarchyId == null ? 0 : hierarchyId.hashCode());
+
         return code;
     }
 }

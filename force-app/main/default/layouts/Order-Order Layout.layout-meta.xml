@@ -41,27 +41,27 @@
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
-                <field>Tipo_Frete__c</field>
+                <field>FreightType__c</field>
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
-                <field>Numero_Pedido_Representante__c</field>
+                <field>RepresentativeOrderNumber__c</field>
             </layoutItems>
             <layoutItems>
                 <behavior>Required</behavior>
-                <field>Centro_Distribuicao__c</field>
+                <field>DistributionCenter__c</field>
             </layoutItems>
             <layoutItems>
                 <behavior>Required</behavior>
-                <field>Endereco__c</field>
+                <field>Address__c</field>
             </layoutItems>
             <layoutItems>
                 <behavior>Required</behavior>
-                <field>Condicao_Pagamento__c</field>
+                <field>PaymentTerm__c</field>
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
-                <field>Precos_Recalculados__c</field>
+                <field>PricesRecalculated__c</field>
             </layoutItems>
         </layoutColumns>
         <layoutColumns>

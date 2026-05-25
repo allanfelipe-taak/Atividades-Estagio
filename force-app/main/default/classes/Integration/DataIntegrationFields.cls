@@ -24,9 +24,9 @@ global with sharing class DataIntegrationFields {
 		public Date effectiveDate;
 		public String accountExternalId;
 		public String pricebook2ExternalId;
-		public String condicaoPagamento;
-		public String centroDistribuicao;
-		public String tipoFrete;
+		public String paymentTerm;
+		public String distributionCenter;
+		public String freightType;
 
 		public List<OrderItemINData> orderItemList {get; set;}
 
@@ -38,9 +38,9 @@ global with sharing class DataIntegrationFields {
 				EffectiveDate	= this.effectiveDate,
 				Pricebook2		= new Pricebook2(ExternalId__c = this.pricebook2ExternalId),
 				Account			= new Account(ExternalId__c = this.accountExternalId),
-				Centro_Distribuicao__r = new Centro_Distribuicao__c(ExternalId__c = this.centroDistribuicao),
-				Tipo_Frete__c = this.tipoFrete,
-				Condicao_Pagamento__r = new Condicao_Pagamento__c(ExternalId__c = this.condicaoPagamento)
+				DistributionCenter__r = new DistributionCenter__c(ExternalId__c = this.distributionCenter),
+				FreightType__c = this.freightType,
+				PaymentTerm__r = new PaymentTerm__c(ExternalId__c = this.paymentTerm)
 			);
 		}
 
@@ -237,7 +237,7 @@ public Date effectiveDate;
 public Date deliveryDate;
 public String accountExternalId;
 public String pricebook2ExternalId;
-public String paymentConditions;
+public String paymentTerm;
 public String distributionCenter;
 public String freightType;
 public String address;
@@ -251,12 +251,12 @@ public String address;
 			this.effectiveDate = order.EffectiveDate;
 			this.accountExternalId = order.Account.ExternalId__c;
 			this.pricebook2ExternalId = order.Pricebook2.ExternalId__c;
-			this.paymentConditions = order.Condicao_Pagamento__r.ExternalId__c;
-			this.distributionCenter = order.Centro_Distribuicao__r.ExternalId__c;
-			this.address = order.Endereco__r.ExternalId__c;
-			this.freightType = order.Tipo_Frete__c;
+			this.paymentTerm = order.PaymentTerm__r.ExternalId__c;
+			this.distributionCenter = order.DistributionCenter__r.ExternalId__c;
+			this.address = order.Address__r.ExternalId__c;
+			this.freightType = order.FreightType__c;
 			this.deliveryDate = order.DeliveryDate__c;
-			
+
 
 			this.orderItemList = new List<OrderItemParameters>();
 

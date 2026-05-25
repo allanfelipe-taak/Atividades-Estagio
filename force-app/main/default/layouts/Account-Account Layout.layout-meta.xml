@@ -43,11 +43,11 @@
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
-                <field>Categoria__c</field>
+                <field>Category__c</field>
             </layoutItems>
             <layoutItems>
                 <behavior>Edit</behavior>
-                <field>Grupo_de_Conta__c</field>
+                <field>AccountGroup__c</field>
             </layoutItems>
         </layoutColumns>
         <layoutColumns>
@@ -298,7 +298,7 @@
     </relatedLists>
     <relatedLists>
         <fields>NAME</fields>
-        <relatedList>Margem__c.Conta__c</relatedList>
+        <relatedList>Margin__c.Account__c</relatedList>
     </relatedLists>
     <relatedObjects>ParentId</relatedObjects>
     <showEmailCheckbox>false</showEmailCheckbox>

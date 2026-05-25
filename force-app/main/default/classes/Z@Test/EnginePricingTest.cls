@@ -6,36 +6,36 @@ public class EnginePricingTest {
         TestFactorySObject factory = TestFactorySObject.getInstance();
 
         // 1. INFRAESTRUTURA 
-        Condicao_Pagamento__c cond = (Condicao_Pagamento__c) factory.createSObject(new Condicao_Pagamento__c(Name = 'A Vista'));
+        PaymentTerm__c cond = (PaymentTerm__c) factory.createSObject(new PaymentTerm__c(Name = 'A Vista'));
         insert cond;
 
-        Centro_Distribuicao__c cd = (Centro_Distribuicao__c) factory.createSObject(new Centro_Distribuicao__c(Name = 'CD Principal'));
+        DistributionCenter__c cd = (DistributionCenter__c) factory.createSObject(new DistributionCenter__c(Name = 'CD Principal'));
         insert cd;
 
-        Cidade__c cid = (Cidade__c) factory.createSObject(new Cidade__c(Name = 'São Bernardo do Campo'));
+        City__c cid = (City__c) factory.createSObject(new City__c(Name = 'São Bernardo do Campo'));
         insert cid;
 
-        Estado__c est = (Estado__c) factory.createSObject(new Estado__c(Name = 'São Paulo'));
+        State__c est = (State__c) factory.createSObject(new State__c(Name = 'São Paulo'));
         insert est;
 
         
-        Endereco__c ender = (Endereco__c) factory.createSObject(new Endereco__c(Name = 'Rua de Teste, 10'));
+        Address__c ender = (Address__c) factory.createSObject(new Address__c(Name = 'Rua de Teste, 10'));
         insert ender;
 
         // 2. CLIENTE E PRODUTO
-        Grupo_de_Conta__c vipAgro = (Grupo_de_Conta__c) factory.createSObject(new Grupo_de_Conta__c(Name = 'VIP Agro'));
+        AccountGroup__c vipAgro = (AccountGroup__c) factory.createSObject(new AccountGroup__c(Name = 'VIP Agro'));
         insert vipAgro;
 
-        Account accVIP = (Account) factory.createSObject(new Account(Name = 'Cliente VIP S/A', Grupo_de_Conta__c = vipAgro.Id, CNPJ__c = '11.111.111/0001-11'));
+        Account accVIP = (Account) factory.createSObject(new Account(Name = 'Cliente VIP S/A', AccountGroup__c = vipAgro.Id, CNPJ__c = '11.111.111/0001-11'));
         insert accVIP;
 
-        Hierarquia_de_Produto__c hTrator = (Hierarquia_de_Produto__c) factory.createSObject(new Hierarquia_de_Produto__c(Name='Tratores'));
+        ProductHierarchy__c hTrator = (ProductHierarchy__c) factory.createSObject(new ProductHierarchy__c(Name='Tratores'));
         insert hTrator;
 
         Product2 trator = (Product2) factory.createSObject(new Product2(
             Name = 'Trator de Esteira Max', 
-            Custo_Producao__c = 1000.00, 
-            Hierarquia_de_Produto__c = hTrator.Id
+            ProductionCost__c = 1000.00, 
+            ProductHierarchy__c = hTrator.Id
         ));
         insert trator;
 
@@ -51,36 +51,36 @@ public class EnginePricingTest {
             EffectiveDate = Date.today(),
             Status = 'Draft', 
             Pricebook2Id = pbId,
-            Centro_Distribuicao__c = cd.Id, 
-            Endereco__c = ender.Id,         
-            Condicao_Pagamento__c = cond.Id 
+            DistributionCenter__c = cd.Id, 
+            Address__c = ender.Id,         
+            PaymentTerm__c = cond.Id 
         );
         insert pedPadrao;
 
         // 4. REGRAS DO MOTOR 
-        insert (Margem__c) factory.createSObject(new Margem__c(
-            Produto__c = trator.Id, 
-            Conta__c = accVIP.Id, 
-            Cidade__c = cid.Id, 
-            Valor__c = 10, 
-            Status__c = 'Aprovado',
-            Centro_Distribuicao__c = cd.Id
+        insert (Margin__c) factory.createSObject(new Margin__c(
+            Product__c = trator.Id, 
+            Account__c = accVIP.Id, 
+            City__c = cid.Id, 
+            Value__c = 10, 
+            Status__c = 'Approved',
+            DistributionCenter__c = cd.Id
         ));
 
-        insert (Frete__c) factory.createSObject(new Frete__c(
-            Produto__c = trator.Id, 
-            Cidade__c = cid.Id, 
-            Valor__c = 50, 
-            Status__c = 'Aprovado',
-            Centro_Distribuicao__c = cd.Id
+        insert (Freight__c) factory.createSObject(new Freight__c(
+            Product__c = trator.Id, 
+            City__c = cid.Id, 
+            Value__c = 50, 
+            Status__c = 'Approved',
+            DistributionCenter__c = cd.Id
         ));
 
-        insert (Imposto__c) factory.createSObject(new Imposto__c(
-            Produto__c = trator.Id, 
-            Estado__c = est.Id, 
-            Imposto_sobre_custo__c = 12, 
-            Status__c = 'Aprovado',
-            Centro_Distribuicao__c = cd.Id
+        insert (Tax__c) factory.createSObject(new Tax__c(
+            Product__c = trator.Id, 
+            State__c = est.Id, 
+            TaxOnCost__c = 12, 
+            Status__c = 'Approved',
+            DistributionCenter__c = cd.Id
         ));
     }
 
@@ -93,9 +93,9 @@ public class EnginePricingTest {
     // ==========================================================
     @isTest
     static void testCoberturaMetodosVaziosDireto() {
-        MargemHandler mHandler = new MargemHandler();
-        FreteHandler fHandler = new FreteHandler();
-        ImpostoHandler iHandler = new ImpostoHandler();
+        MarginHandler mHandler = new MarginHandler();
+        FreightHandler fHandler = new FreightHandler();
+        TaxHandler iHandler = new TaxHandler();
         OrderHandler oHandler = new OrderHandler();
 
         List<SObject> listaVazia = new List<SObject>();
@@ -139,7 +139,7 @@ public class EnginePricingTest {
         // ==========================================================
         // 1. TESTE DO ERRO (Sad Path - Limpa a linha do throw)
         // ==========================================================
-        Product2 prodSemCusto = new Product2(Name = 'Produto Errado', Custo_Producao__c = null);
+        Product2 prodSemCusto = new Product2(Name = 'Produto Errado', ProductionCost__c = null);
         insert prodSemCusto;
 
         OrderItem itemErro = new OrderItem(UnitPrice = 0, Quantity = 1);
@@ -156,7 +156,7 @@ public class EnginePricingTest {
         // 2. TESTE DE PESOS E CÁLCULO 
         // ==========================================================
         // Precisamos de um produto COM custo para o código continuar até o final
-        Product2 prodOk = [SELECT Id, Custo_Producao__c FROM Product2 WHERE Custo_Producao__c != null LIMIT 1];
+        Product2 prodOk = [SELECT Id, ProductionCost__c FROM Product2 WHERE ProductionCost__c != null LIMIT 1];
         
         OrderItem itemOk = new OrderItem(UnitPrice = 0, Quantity = 1);
         itemOk.Product2 = prodOk;
@@ -165,32 +165,32 @@ public class EnginePricingTest {
         PricingItem pItem = new PricingItem(itemOk);
 
    // 1. Criamos os registros auxiliares primeiro
-Pais__c paisTeste = new Pais__c(Name = 'Brasil');
+Country__c paisTeste = new Country__c(Name = 'Brasil');
 insert paisTeste;
 
-Grupo_de_Conta__c grupoTeste = new Grupo_de_Conta__c(Name = 'VIP');
+AccountGroup__c grupoTeste = new AccountGroup__c(Name = 'VIP');
 insert grupoTeste;
 
-Hierarquia_de_Produto__c hierarquiaTeste = new Hierarquia_de_Produto__c(Name = 'Tratores');
+ProductHierarchy__c hierarquiaTeste = new ProductHierarchy__c(Name = 'Tratores');
 insert hierarquiaTeste;
 
 // 2. Agora montamos a regra usando os IDs que acabamos de criar
-Margem__c regraCompleta = new Margem__c(
-    Pais__c = paisTeste.Id,
-    Grupo_de_Conta__c = grupoTeste.Id,
-    Hierarquia_de_Produto__c = hierarquiaTeste.Id,
-    Produto__c = prodOk.Id 
+Margin__c regraCompleta = new Margin__c(
+    Country__c = paisTeste.Id,
+    AccountGroup__c = grupoTeste.Id,
+    ProductHierarchy__c = hierarquiaTeste.Id,
+    Product__c = prodOk.Id 
 );
         
-        Integer pesoCalculado = pItem.calcularPeso(regraCompleta);
+        Integer pesoCalculado = pItem.calculateWeight(regraCompleta);
         System.assert(pesoCalculado > 1000000, 'O peso deve ser alto');
 
         // Teste do Preço Sugerido e Matemática (Cobre a imagem 1586ce)
-        pItem.frete = 10;
-        pItem.imposto = 10;
-        pItem.margem = 10;
+        pItem.freight = 10;
+        pItem.tax = 10;
+        pItem.margin = 10;
         
-        pItem.aplicarCalculoFinal();
+        pItem.applyFinalCalculation();
         
         // Validação da Fórmula: (Custo + Frete) * (1 + i) * (1 + m)
         System.assert(itemOk.UnitPrice > 0, 'O motor deveria ter preenchido o UnitPrice');
@@ -206,15 +206,15 @@ Margem__c regraCompleta = new Margem__c(
         Account acc = [SELECT Id FROM Account LIMIT 1];
         Product2 prod = [SELECT Id FROM Product2 LIMIT 1];
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry WHERE Product2Id = :prod.Id LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Condicao_Pagamento__c cond = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
-        Endereco__c ender = [SELECT Id FROM Endereco__c LIMIT 1];
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        PaymentTerm__c cond = [SELECT Id FROM PaymentTerm__c LIMIT 1];
+        Address__c ender = [SELECT Id FROM Address__c LIMIT 1];
 
         Order ped = new Order(
             AccountId = acc.Id, EffectiveDate = Date.today(), Status = 'Draft', 
-            Pricebook2Id = Test.getStandardPricebookId(), Centro_Distribuicao__c = cd.Id, 
-            Condicao_Pagamento__c = cond.Id,
-            Endereco__c = ender.Id
+            Pricebook2Id = Test.getStandardPricebookId(), DistributionCenter__c = cd.Id, 
+            PaymentTerm__c = cond.Id,
+            Address__c = ender.Id
         );
         insert ped;
 
@@ -228,12 +228,12 @@ Margem__c regraCompleta = new Margem__c(
 
         // 2. AGORA SIM chamamos o startTest e o Selector
         Test.startTest();
-        List<OrderItem> resultado = PricingSelector.buscarItensComPedido(idsParaBusca);
+        List<OrderItem> resultado = PricingSelector.searchItemsWithOrder(idsParaBusca);
         Test.stopTest();
 
         // 3. Verificamos se o Selector trouxe as informações do cabeçalho do pedido
         System.assertEquals(1, resultado.size(), 'O Selector deveria ter encontrado o item.');
-        System.assertNotEquals(null, resultado[0].Order.Centro_Distribuicao__c, 'Deveria ter trazido o CD do Pedido.');
+        System.assertNotEquals(null, resultado[0].Order.DistributionCenter__c, 'Deveria ter trazido o CD do Pedido.');
     }
     // ==========================================================
     //  1. TESTE DE BLOQUEIO: MARGEM
@@ -242,18 +242,18 @@ Margem__c regraCompleta = new Margem__c(
     static void testBloqueioDeDuplicidade_Margem() {
         Product2 trator = [SELECT Id FROM Product2 LIMIT 1];
         Account accVIP = [SELECT Id FROM Account LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Cidade__c cid = [SELECT Id FROM Cidade__c LIMIT 1]; 
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        City__c cid = [SELECT Id FROM City__c LIMIT 1]; 
         
         Test.startTest();
         try {
-            Margem__c mDup = new Margem__c(
-                Produto__c = trator.Id, 
-                Conta__c = accVIP.Id, 
-                Centro_Distribuicao__c = cd.Id, 
-                Cidade__c = cid.Id, 
-                Valor__c = 99,
-                Status__c = 'Aprovado'
+            Margin__c mDup = new Margin__c(
+                Product__c = trator.Id, 
+                Account__c = accVIP.Id, 
+                DistributionCenter__c = cd.Id, 
+                City__c = cid.Id, 
+                Value__c = 99,
+                Status__c = 'Approved'
             );
             insert mDup;
             System.assert(false, '❌ A Trigger deveria ter bloqueado a duplicidade de Margem!');
@@ -269,17 +269,17 @@ Margem__c regraCompleta = new Margem__c(
     @isTest
     static void testBloqueioDeDuplicidade_Frete() {
         Product2 trator = [SELECT Id FROM Product2 LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Cidade__c cid = [SELECT Id FROM Cidade__c LIMIT 1]; 
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        City__c cid = [SELECT Id FROM City__c LIMIT 1]; 
         
         Test.startTest();
         try {
-            Frete__c fDup = new Frete__c(
-                Produto__c = trator.Id, 
-                Centro_Distribuicao__c = cd.Id,
-                Cidade__c = cid.Id, 
-                Valor__c = 99,
-                Status__c = 'Aprovado'
+            Freight__c fDup = new Freight__c(
+                Product__c = trator.Id, 
+                DistributionCenter__c = cd.Id,
+                City__c = cid.Id, 
+                Value__c = 99,
+                Status__c = 'Approved'
             );
             insert fDup;
             System.assert(false, '❌ A Trigger deveria ter bloqueado a duplicidade de Frete!');
@@ -295,17 +295,17 @@ Margem__c regraCompleta = new Margem__c(
     @isTest
     static void testBloqueioDeDuplicidade_Imposto() {
         Product2 trator = [SELECT Id FROM Product2 LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Estado__c est = [SELECT Id FROM Estado__c LIMIT 1]; 
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        State__c est = [SELECT Id FROM State__c LIMIT 1]; 
         
         Test.startTest();
         try {
-            Imposto__c iDup = new Imposto__c(
-                Produto__c = trator.Id, 
-                Centro_Distribuicao__c = cd.Id,
-                Estado__c = est.Id, 
-                Imposto_sobre_custo__c = 99, 
-                Status__c = 'Aprovado'
+            Tax__c iDup = new Tax__c(
+                Product__c = trator.Id, 
+                DistributionCenter__c = cd.Id,
+                State__c = est.Id, 
+                TaxOnCost__c = 99, 
+                Status__c = 'Approved'
             );
             insert iDup;
             System.assert(false, '❌ A Trigger deveria ter bloqueado a duplicidade de Imposto!');
@@ -321,11 +321,11 @@ Margem__c regraCompleta = new Margem__c(
     @isTest
     static void testPricingKeyDireto() {
         // 1. Pega um Frete do Setup
-        Frete__c f1 = [SELECT Produto__c, Estado__c, Cidade__c, Hierarquia_de_Produto__c, Pais__c FROM Frete__c LIMIT 1];
+        Freight__c f1 = [SELECT Product__c, State__c, City__c, ProductHierarchy__c, Country__c FROM Freight__c LIMIT 1];
         
         // 2. Cria uma cópia diferente (para testar o equals = false)
-        Frete__c f2 = f1.clone();
-        f2.Cidade__c = null; // Altera um campo para a chave ser diferente
+        Freight__c f2 = f1.clone();
+        f2.City__c = null; // Altera um campo para a chave ser diferente
 
         Test.startTest();
         PricingKey chave1 = new PricingKey(f1);
@@ -415,9 +415,9 @@ Margem__c regraCompleta = new Margem__c(
     static void testErroAlterarClientePedido() {
         // 1. Busca os dados do Setup
         Account accOriginal = [SELECT Id FROM Account LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Endereco__c ender = [SELECT Id FROM Endereco__c LIMIT 1];
-        Condicao_Pagamento__c cond = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        Address__c ender = [SELECT Id FROM Address__c LIMIT 1];
+        PaymentTerm__c cond = [SELECT Id FROM PaymentTerm__c LIMIT 1];
 
         // 2. Cria uma SEGUNDA conta para tentar a fraude
         Account accNova = new Account(Name = 'Cliente Fraude', CNPJ__c = '22.222.222/0001-22');
@@ -429,9 +429,9 @@ Margem__c regraCompleta = new Margem__c(
             EffectiveDate = Date.today(),
             Status = 'Draft',
             Pricebook2Id = Test.getStandardPricebookId(),
-            Centro_Distribuicao__c = cd.Id,
-            Endereco__c = ender.Id,
-            Condicao_Pagamento__c = cond.Id
+            DistributionCenter__c = cd.Id,
+            Address__c = ender.Id,
+            PaymentTerm__c = cond.Id
         );
         insert ped;
 
@@ -454,9 +454,9 @@ Margem__c regraCompleta = new Margem__c(
     static void testErroModificarPedidoAtivo() {
         // 1. Busca os dados do Setup (Agora buscando o Produto também!)
         Account acc = [SELECT Id FROM Account LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Endereco__c ender = [SELECT Id FROM Endereco__c LIMIT 1];
-        Condicao_Pagamento__c cond = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        Address__c ender = [SELECT Id FROM Address__c LIMIT 1];
+        PaymentTerm__c cond = [SELECT Id FROM PaymentTerm__c LIMIT 1];
         Product2 prod = [SELECT Id FROM Product2 LIMIT 1];
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry WHERE Product2Id = :prod.Id LIMIT 1];
 
@@ -466,9 +466,9 @@ Margem__c regraCompleta = new Margem__c(
             EffectiveDate = Date.today(),
             Status = 'Draft', 
             Pricebook2Id = Test.getStandardPricebookId(),
-            Centro_Distribuicao__c = cd.Id,
-            Endereco__c = ender.Id,
-            Condicao_Pagamento__c = cond.Id
+            DistributionCenter__c = cd.Id,
+            Address__c = ender.Id,
+            PaymentTerm__c = cond.Id
         );
         insert ped;
 
@@ -504,18 +504,18 @@ Margem__c regraCompleta = new Margem__c(
     @isTest
     static void testDeleteUndeleteOrder() {
         Account acc = [SELECT Id FROM Account LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Endereco__c ender = [SELECT Id FROM Endereco__c LIMIT 1];
-        Condicao_Pagamento__c cond = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        Address__c ender = [SELECT Id FROM Address__c LIMIT 1];
+        PaymentTerm__c cond = [SELECT Id FROM PaymentTerm__c LIMIT 1];
 
         Order ped = new Order(
             AccountId = acc.Id,
             EffectiveDate = Date.today(),
             Status = 'Draft',
             Pricebook2Id = Test.getStandardPricebookId(),
-            Centro_Distribuicao__c = cd.Id,
-            Endereco__c = ender.Id,
-            Condicao_Pagamento__c = cond.Id
+            DistributionCenter__c = cd.Id,
+            Address__c = ender.Id,
+            PaymentTerm__c = cond.Id
         );
         insert ped;
 
@@ -535,20 +535,20 @@ Margem__c regraCompleta = new Margem__c(
     @isTest
     static void testUpdateParaCobertura() {
         // Busca um de cada
-        Margem__c m = [SELECT Id FROM Margem__c LIMIT 1];
-        Frete__c f = [SELECT Id FROM Frete__c LIMIT 1];
-        Imposto__c i = [SELECT Id FROM Imposto__c LIMIT 1];
+        Margin__c m = [SELECT Id FROM Margin__c LIMIT 1];
+        Freight__c f = [SELECT Id FROM Freight__c LIMIT 1];
+        Tax__c i = [SELECT Id FROM Tax__c LIMIT 1];
 
         // Altera os valores para disparar o Update
-        m.Valor__c = 99;
-        f.Valor__c = 99;
-        i.Imposto_sobre_custo__c = 99;
+        m.Value__c = 99;
+        f.Value__c = 99;
+        i.TaxOnCost__c = 99;
 
         Test.startTest();
         update new List<SObject>{m, f, i};
         Test.stopTest();
         
-        System.assertEquals(99, [SELECT Valor__c FROM Margem__c WHERE Id = :m.Id].Valor__c);
+        System.assertEquals(99, [SELECT Value__c FROM Margin__c WHERE Id = :m.Id].Value__c);
     }
     
     
@@ -564,9 +564,9 @@ Margem__c regraCompleta = new Margem__c(
         // 1. BUSCAR DADOS DO SETUP (Evita erros de campos obrigatórios)
         // ----------------------------------------------------------
         Account acc = [SELECT Id FROM Account LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Endereco__c ender = [SELECT Id FROM Endereco__c LIMIT 1];
-        Condicao_Pagamento__c cond = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        Address__c ender = [SELECT Id FROM Address__c LIMIT 1];
+        PaymentTerm__c cond = [SELECT Id FROM PaymentTerm__c LIMIT 1];
         Product2 prod = [SELECT Id FROM Product2 LIMIT 1];
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry WHERE Product2Id = :prod.Id LIMIT 1];
 
@@ -578,9 +578,9 @@ Margem__c regraCompleta = new Margem__c(
             EffectiveDate = Date.today(),
             Status = 'Draft', 
             Pricebook2Id = Test.getStandardPricebookId(),
-            Centro_Distribuicao__c = cd.Id, // <-- Preenchendo o que o erro pediu!
-            Endereco__c = ender.Id,         // <-- Preenchendo o que o erro pediu!
-            Condicao_Pagamento__c = cond.Id // <-- Preenchendo o que o erro pediu!
+            DistributionCenter__c = cd.Id, // <-- Preenchendo o que o erro pediu!
+            Address__c = ender.Id,         // <-- Preenchendo o que o erro pediu!
+            PaymentTerm__c = cond.Id // <-- Preenchendo o que o erro pediu!
         );
         insert ped;
 
@@ -629,7 +629,7 @@ Margem__c regraCompleta = new Margem__c(
     // ==========================================================
     @isTest
     static void testDeleteUndeleteParaCobertura() {
-        Margem__c m = [SELECT Id FROM Margem__c LIMIT 1];
+        Margin__c m = [SELECT Id FROM Margin__c LIMIT 1];
         
         Test.startTest();
         delete m;    // Cobre o afterDelete
@@ -646,16 +646,16 @@ Margem__c regraCompleta = new Margem__c(
     static void testValidacoesNegativasParaCobertura() {
         // Tenta criar um Frete com 2 produtos (Erro: prodCount > 1)
         Product2 p = [SELECT Id FROM Product2 LIMIT 1];
-        Hierarquia_de_Produto__c h = [SELECT Id FROM Hierarquia_de_Produto__c LIMIT 1];
-        Cidade__c cid = [SELECT Id FROM Cidade__c LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
+        ProductHierarchy__c h = [SELECT Id FROM ProductHierarchy__c LIMIT 1];
+        City__c cid = [SELECT Id FROM City__c LIMIT 1];
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
 
-        Frete__c fErro = new Frete__c(
-            Produto__c = p.Id, 
-            Hierarquia_de_Produto__c = h.Id, // <- DUAS informações de produto (VAI DAR ERRO)
-            Cidade__c = cid.Id,
-            Centro_Distribuicao__c = cd.Id,
-            Valor__c = 10
+        Freight__c fErro = new Freight__c(
+            Product__c = p.Id, 
+            ProductHierarchy__c = h.Id, // <- DUAS informações de produto (VAI DAR ERRO)
+            City__c = cid.Id,
+            DistributionCenter__c = cd.Id,
+            Value__c = 10
         );
 
         try {
@@ -672,24 +672,24 @@ Margem__c regraCompleta = new Margem__c(
     static void testErrosCamposExclusivosMargem() {
         // 1. Busca os dados do Setup que vamos usar para "forçar" o erro
         Account acc = [SELECT Id FROM Account LIMIT 1];
-        Grupo_de_Conta__c grupo = [SELECT Id FROM Grupo_de_Conta__c LIMIT 1];
+        AccountGroup__c grupo = [SELECT Id FROM AccountGroup__c LIMIT 1];
         Product2 prod = [SELECT Id FROM Product2 LIMIT 1];
-        Hierarquia_de_Produto__c hProd = [SELECT Id FROM Hierarquia_de_Produto__c LIMIT 1];
-        Cidade__c cid = [SELECT Id FROM Cidade__c LIMIT 1];
-        Estado__c est = [SELECT Id FROM Estado__c LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1]; 
+        ProductHierarchy__c hProd = [SELECT Id FROM ProductHierarchy__c LIMIT 1];
+        City__c cid = [SELECT Id FROM City__c LIMIT 1];
+        State__c est = [SELECT Id FROM State__c LIMIT 1];
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1]; 
 
         Test.startTest();
 
         // 🎯 TESTE 1: Conta + Grupo de Conta juntos (Cobre a Linha 22)
-        Margem__c m1 = new Margem__c(
-            Conta__c = acc.Id, 
-            Grupo_de_Conta__c = grupo.Id, // <-- O GATILHO AQUI
-            Produto__c = prod.Id,         // Válido
-            Cidade__c = cid.Id,           // Válido
-            Centro_Distribuicao__c = cd.Id,
-            Valor__c = 10,
-            Status__c = 'Aprovado'
+        Margin__c m1 = new Margin__c(
+            Account__c = acc.Id, 
+            AccountGroup__c = grupo.Id, // <-- O GATILHO AQUI
+            Product__c = prod.Id,         // Válido
+            City__c = cid.Id,           // Válido
+            DistributionCenter__c = cd.Id,
+            Value__c = 10,
+            Status__c = 'Approved'
         );
         try {
             insert m1;
@@ -699,14 +699,14 @@ Margem__c regraCompleta = new Margem__c(
         }
 
         // 🎯 TESTE 2: Produto + Hierarquia juntos (Cobre a Linha 27)
-        Margem__c m2 = new Margem__c(
-            Conta__c = acc.Id,            // Válido
-            Produto__c = prod.Id,
-            Hierarquia_de_Produto__c = hProd.Id, // <-- O GATILHO AQUI
-            Cidade__c = cid.Id,           // Válido
-            Centro_Distribuicao__c = cd.Id,
-            Valor__c = 10,
-            Status__c = 'Aprovado'
+        Margin__c m2 = new Margin__c(
+            Account__c = acc.Id,            // Válido
+            Product__c = prod.Id,
+            ProductHierarchy__c = hProd.Id, // <-- O GATILHO AQUI
+            City__c = cid.Id,           // Válido
+            DistributionCenter__c = cd.Id,
+            Value__c = 10,
+            Status__c = 'Approved'
         );
         try {
             insert m2;
@@ -716,14 +716,14 @@ Margem__c regraCompleta = new Margem__c(
         }
 
         // 🎯 TESTE 3: Cidade + Estado juntos (Cobre a Linha 37)
-        Margem__c m3 = new Margem__c(
-            Conta__c = acc.Id,            // Válido
-            Produto__c = prod.Id,         // Válido
-            Cidade__c = cid.Id,
-            Estado__c = est.Id,           // <-- O GATILHO AQUI (2 localidades)
-            Centro_Distribuicao__c = cd.Id,
-            Valor__c = 10,
-            Status__c = 'Aprovado'
+        Margin__c m3 = new Margin__c(
+            Account__c = acc.Id,            // Válido
+            Product__c = prod.Id,         // Válido
+            City__c = cid.Id,
+            State__c = est.Id,           // <-- O GATILHO AQUI (2 localidades)
+            DistributionCenter__c = cd.Id,
+            Value__c = 10,
+            Status__c = 'Approved'
         );
         try {
             insert m3;
@@ -746,13 +746,13 @@ Margem__c regraCompleta = new Margem__c(
         Account accVIP = [SELECT Id FROM Account LIMIT 1];
         Product2 trator = [SELECT Id FROM Product2 LIMIT 1];
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry WHERE Product2Id = :trator.Id LIMIT 1];
-        Condicao_Pagamento__c cond = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Endereco__c ender = [SELECT Id FROM Endereco__c LIMIT 1]; 
+        PaymentTerm__c cond = [SELECT Id FROM PaymentTerm__c LIMIT 1];
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        Address__c ender = [SELECT Id FROM Address__c LIMIT 1]; 
 
         Order ped = new Order(
             AccountId = accVIP.Id, EffectiveDate = Date.today(), Status = 'Draft', Pricebook2Id = Test.getStandardPricebookId(),
-            ShippingCity = 'São Bernardo do Campo', Centro_Distribuicao__c = cd.Id, Condicao_Pagamento__c = cond.Id, Endereco__c = ender.Id 
+            ShippingCity = 'São Bernardo do Campo', DistributionCenter__c = cd.Id, PaymentTerm__c = cond.Id, Address__c = ender.Id 
         );
         insert ped;
 
@@ -765,11 +765,11 @@ Margem__c regraCompleta = new Margem__c(
         insert itemUnico;
         Test.stopTest();
 
-        OrderItem resultado = [SELECT Valor_Frete__c, Porcentagem_Imposto__c, Porcentagem_Margem__c FROM OrderItem WHERE Id = :itemUnico.Id];
-        
-        System.assertEquals(10, resultado.Porcentagem_Margem__c, '🎯 Falhou: Não pegou a Margem Campeã (10%)');
-        System.assertEquals(50, resultado.Valor_Frete__c, '🎯 Falhou: Não pegou o Frete Campeão (R$ 50)');
-        System.assertEquals(12, resultado.Porcentagem_Imposto__c, '🎯 Falhou: Imposto incorreto');
+        OrderItem resultado = [SELECT FreightValue__c, TaxPercentage__c, MarginPercentage__c FROM OrderItem WHERE Id = :itemUnico.Id];
+
+        System.assertEquals(10, resultado.MarginPercentage__c, '🎯 Falhou: Não pegou a Margem Campeã (10%)');
+        System.assertEquals(50, resultado.FreightValue__c, '🎯 Falhou: Não pegou o Frete Campeão (R$ 50)');
+        System.assertEquals(12, resultado.TaxPercentage__c, '🎯 Falhou: Imposto incorreto');
     }
 
     // ==========================================================
@@ -781,13 +781,13 @@ Margem__c regraCompleta = new Margem__c(
         Account accVIP = [SELECT Id FROM Account LIMIT 1];
         Product2 trator = [SELECT Id FROM Product2 LIMIT 1];
         PricebookEntry pbe = [SELECT Id FROM PricebookEntry WHERE Product2Id = :trator.Id LIMIT 1];
-        Condicao_Pagamento__c cond = [SELECT Id FROM Condicao_Pagamento__c LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Endereco__c ender = [SELECT Id FROM Endereco__c LIMIT 1]; 
+        PaymentTerm__c cond = [SELECT Id FROM PaymentTerm__c LIMIT 1];
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        Address__c ender = [SELECT Id FROM Address__c LIMIT 1]; 
 
         Order ped = new Order(
             AccountId = accVIP.Id, EffectiveDate = Date.today(), Status = 'Draft', Pricebook2Id = Test.getStandardPricebookId(),
-            ShippingCity = 'São Bernardo do Campo', Centro_Distribuicao__c = cd.Id, Condicao_Pagamento__c = cond.Id, Endereco__c = ender.Id 
+            ShippingCity = 'São Bernardo do Campo', DistributionCenter__c = cd.Id, PaymentTerm__c = cond.Id, Address__c = ender.Id 
         );
         insert ped;
 
@@ -816,19 +816,19 @@ Margem__c regraCompleta = new Margem__c(
     static void testBloqueioDeDuplicidade_Margem_Bulk() {
         Product2 trator = [SELECT Id FROM Product2 LIMIT 1];
         Account accVIP = [SELECT Id FROM Account LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Cidade__c cid = [SELECT Id FROM Cidade__c LIMIT 1]; 
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        City__c cid = [SELECT Id FROM City__c LIMIT 1]; 
         
         // Criando 200 regras "clones" na memória
-        List<Margem__c> listaDuplicadas = new List<Margem__c>();
+        List<Margin__c> listaDuplicadas = new List<Margin__c>();
         for(Integer i = 0; i < 200; i++) {
-            listaDuplicadas.add(new Margem__c(
-                Produto__c = trator.Id, 
-                Conta__c = accVIP.Id, 
-                Centro_Distribuicao__c = cd.Id, 
-                Cidade__c = cid.Id, 
-                Valor__c = 99, 
-                Status__c = 'Aprovado'
+            listaDuplicadas.add(new Margin__c(
+                Product__c = trator.Id, 
+                Account__c = accVIP.Id, 
+                DistributionCenter__c = cd.Id, 
+                City__c = cid.Id, 
+                Value__c = 99, 
+                Status__c = 'Approved'
             ));
         }
 
@@ -851,20 +851,20 @@ Margem__c regraCompleta = new Margem__c(
     @isTest
     static void testBloqueioDeDuplicidade_Frete_Bulk() {
         Product2 trator = [SELECT Id FROM Product2 LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Cidade__c cid = [SELECT Id FROM Cidade__c LIMIT 1];
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        City__c cid = [SELECT Id FROM City__c LIMIT 1];
 
 
 
      // Criando 200 regras "clones" na memória
-        List<Frete__c> listaDuplicadas = new List<Frete__c>();
+        List<Freight__c> listaDuplicadas = new List<Freight__c>();
         for(Integer i = 0; i < 200; i++) {
-            listaDuplicadas.add(new Frete__c(
-                Produto__c = trator.Id, 
-                Centro_Distribuicao__c = cd.Id,
-                Cidade__c = cid.Id, 
-                Valor__c = 99,
-                Status__c = 'Aprovado'
+            listaDuplicadas.add(new Freight__c(
+                Product__c = trator.Id, 
+                DistributionCenter__c = cd.Id,
+                City__c = cid.Id, 
+                Value__c = 99,
+                Status__c = 'Approved'
             ));
         }
 
@@ -889,18 +889,18 @@ Margem__c regraCompleta = new Margem__c(
     static void testBloqueioDuplicidade_Imposto_Bulk(){
 
     Product2 trator = [SELECT Id FROM Product2 LIMIT 1];
-        Centro_Distribuicao__c cd = [SELECT Id FROM Centro_Distribuicao__c LIMIT 1];
-        Estado__c est = [SELECT Id FROM Estado__c LIMIT 1]; 
+        DistributionCenter__c cd = [SELECT Id FROM DistributionCenter__c LIMIT 1];
+        State__c est = [SELECT Id FROM State__c LIMIT 1]; 
         
         // Criando 200 regras "clones" na memória
-        List<Imposto__c> listaDuplicadas = new List<Imposto__c>();
+        List<Tax__c> listaDuplicadas = new List<Tax__c>();
         for(Integer i = 0; i < 200; i++) {
-            listaDuplicadas.add(new Imposto__c(
-                Produto__c = trator.Id, 
-                Centro_Distribuicao__c = cd.Id,
-                Estado__c = est.Id, // Lembrando que o imposto usa Estado!
-                Imposto_sobre_custo__c = 99, 
-                Status__c = 'Aprovado'
+            listaDuplicadas.add(new Tax__c(
+                Product__c = trator.Id, 
+                DistributionCenter__c = cd.Id,
+                State__c = est.Id, // Lembrando que o imposto usa Estado!
+                TaxOnCost__c = 99, 
+                Status__c = 'Approved'
             ));
         }
 
@@ -924,7 +924,7 @@ Margem__c regraCompleta = new Margem__c(
         Order ped = [SELECT Id, Pricebook2Id FROM Order LIMIT 1];
 
         // 2. Cria um Produto NOVO, totalmente sem regras de Margem/Frete/Imposto
-        Product2 prodSemRegra = new Product2(Name = 'Produto Fantasma', Custo_Producao__c = 100);
+        Product2 prodSemRegra = new Product2(Name = 'Produto Fantasma', ProductionCost__c = 100);
         insert prodSemRegra;
 
         PricebookEntry pbeFantasma = new PricebookEntry(
@@ -976,12 +976,12 @@ Margem__c regraCompleta = new Margem__c(
 
         Test.startTest();
         // 3. Simula o clique do usuário no botão, chamando o método diretamente!
-        PricingService.recalcular(ped.Id);
+        PricingService.recalculate(ped.Id);
         Test.stopTest();
 
         // 4. Verifica se o checkbox do pedido realmente foi marcado como true (Linha 121)
-        Order pedAtualizado = [SELECT Precos_Recalculados__c FROM Order WHERE Id = :ped.Id];
-        System.assertEquals(true, pedAtualizado.Precos_Recalculados__c, '✅ O checkbox de recalculo deveria estar marcado.');
+        Order pedAtualizado = [SELECT PricesRecalculated__c FROM Order WHERE Id = :ped.Id];
+        System.assertEquals(true, pedAtualizado.PricesRecalculated__c, '✅ O checkbox de recalculo deveria estar marcado.');
     }
     
     
