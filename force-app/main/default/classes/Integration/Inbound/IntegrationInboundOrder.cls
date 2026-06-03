@@ -31,9 +31,10 @@ global with sharing class IntegrationInboundOrder {
 				new Order(), 'IN', fieldDataList, orderResponseList, orderToUpsertList, orderExternalIdList
 			);
 
-			IntegrationUtils.upsertRecords(
-				Database.upsert(orderToUpsertList, Order.Fields.ExternalId__c, false), orderResponseList, orderToUpsertList, Order.Fields.ExternalId__c
-			);
+			// Alterado para 'true' para o sistema explodir o erro real do Pedido se ele falhar!
+            IntegrationUtils.upsertRecords(
+                Database.upsert(orderToUpsertList, Order.Fields.ExternalId__c, true), orderResponseList, orderToUpsertList, Order.Fields.ExternalId__c
+            );
 
 			Boolean hasDeleted = deletedOrderItem(orderItemToUpsertList, false);
 
