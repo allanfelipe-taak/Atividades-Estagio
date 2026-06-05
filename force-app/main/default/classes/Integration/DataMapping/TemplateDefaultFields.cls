@@ -23,7 +23,8 @@ public with sharing class TemplateDefaultFields {
 	public class AccountDefaults implements FieldDefaults {
 		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
 			return new Map<String, Object>{
-				'Name' => 'Account - Teste'
+				'Name' => 'Account - Teste',
+				'CNPJ__c' => '12345678000100'
 			};
 		}
 	}
@@ -90,6 +91,106 @@ public with sharing class TemplateDefaultFields {
 				'EndpointAccessToken__c' => 'EndpointAccessToken',
 				'AccessTokenTime__c' => 360000,
 				'LastAccessTokenTime__c' => Decimal.valueOf(Datetime.now().getTime())
+			};
+		}
+	}
+
+	public class PaymentTermDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>{
+				'Name' => 'Payment Term ' + countSObjectCreated,
+				'ExternalId__c' => 'PaymentTerm' + countSObjectCreated
+			};
+		}
+	}
+
+	public class DistributionCenterDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>{
+				'Name' => 'Distribution Center ' + countSObjectCreated,
+				'ExternalId__c' => 'DistributionCenter' + countSObjectCreated
+			};
+		}
+	}
+
+	public class CityDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>{
+				'Name' => 'City ' + countSObjectCreated
+			};
+		}
+	}
+
+	public class CountryDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>{
+				'Name' => 'Country ' + countSObjectCreated
+			};
+		}
+	}
+
+	public class PaisDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>{
+				'Name' => 'Pais ' + countSObjectCreated
+			};
+		}
+	}
+
+	public class StateDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>{
+				'Name' => 'State ' + countSObjectCreated
+			};
+		}
+	}
+
+	public class MarginDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>();
+		}
+	}
+
+	public class FreightDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>();
+		}
+	}
+
+	public class TaxDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>();
+		}
+	}
+
+	public class ProductHierarchyDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>{
+				'Name' => 'Product Hierarchy ' + countSObjectCreated
+			};
+		}
+	}
+
+	public class AccountGroupDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>{
+				'Name' => 'Account Group ' + countSObjectCreated
+			};
+		}
+	}
+
+	public class IntegrationLogDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>{
+				'Name' => 'Integration Log ' + countSObjectCreated
+			};
+		}
+	}
+
+	public class AddressDefaults implements FieldDefaults {
+		public Map<String, Object> getFieldDefaults(Decimal countSObjectCreated) {
+			return new Map<String, Object>{
+				'Name' => 'Address ' + countSObjectCreated
 			};
 		}
 	}

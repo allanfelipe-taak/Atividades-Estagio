@@ -1,0 +1,1 @@
+- [Integration Reorganization Project](integration-reorganization-project.md) — Complete documentation of 5-folder Integration structure (Callout, Inbound, DataMapping, Utils, TestSupport) with 16 classes
