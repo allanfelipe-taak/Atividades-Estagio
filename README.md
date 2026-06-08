@@ -44,3 +44,57 @@ Cada meta é específica a um único vendedor
 Cada meta podendo ter vários Itens, como R$2.000 reais em vendas de Chinelo, e R$5.000 em vendas utilizando Dinheiro
 Cada meta tem que ser atualizada antes dos vendedores começarem a vender (Todo dia da semana, às 9h)
 
+Concluido no dia 11/06/2026
+
+O que eu aprendi ??
+
+Salesforce Admin (Configuração)
+Criar objetos customizados (Custom Objects)
+Criar campos de diferentes tipos — Currency, Number, Percent, Formula, Lookup, Master-Detail, Roll-up Summary
+Criar Record Types e para que servem
+Entender a diferença entre Master-Detail e Lookup
+Salesforce Developer (Código)
+O que é Batch Apex e quando usar
+Os 3 métodos obrigatórios — start, execute, finish
+O que é Schedulable e como agendar uma classe
+O que é CRON e como escrever uma expressão
+Arquitetura e Boas Práticas
+DDD — Aggregate Root, Entity, Domain Service
+Design Patterns — Template Method, Command, Iterator
+SOLID — Single Responsibility, Open/Closed, etc.
+Por que separar responsabilidades em classes diferentes
+
+Aggregate Root → Goal__c
+É o ponto de entrada do sistema
+Controla o ciclo de vida dos itens
+Se a Meta é deletada, os Itens morrem junto (Master-Detail)
+Entity dentro do Agregado → GoalItem__c
+Tem identidade própria (tem Id)
+Mas não existe sem a Meta
+Só faz sentido dentro do contexto da Meta
+Value Objects → FamiliaProduto__c e CondicaoPagamento__c
+São objetos simples de referência
+Só têm nome, sem lógica própria
+Domain Service → GoalBatch
+Contém a regra de negócio principal
+"Se realizou >= meta, aplica comissão"
+Essa lógica não pertence a nenhum objeto sozinho
+Application Service → GoalBatchScheduler
+Não tem lógica de negócio
+Só orquestra — chama o Domain Service no momento certo
+
+Design Pattern    → onde apareceu ───────────────────────────────────── 
+Template Method   → start/execute/finish - O Salesforce força essa estrutura
+Command           → GoalBatchScheduler - empacotou uma ação para executar no futuro
+Iterator          → for(item : scope) - percorreu a coleção sem gerenciar o loop principal:
+
+SOLID             → onde apareceu ───────────────────────────────────── 
+S                 → classes separadas 
+O                 → pode estender sem modificar 
+L                 → implementam interfaces corretamente 
+I                 → cada classe só assina o que usa 
+D                 → depende de interface, não de classe
+Raciocínio de negócio
+Ler um requisito e transformar em modelagem de dados
+Entender que o código serve o negócio — não o contrário
+Identificar onde um sistema pode evoluir
