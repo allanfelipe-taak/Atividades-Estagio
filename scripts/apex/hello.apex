@@ -1,10 +1,13 @@
-// Use .apex files to store anonymous Apex.
-// You can execute anonymous Apex in VS Code by selecting the
-//     apex text and running the command:
-//     SFDX: Execute Anonymous Apex with Currently Selected Text
-// You can also execute the entire file by running the command:
-//     SFDX: Execute Anonymous Apex with Editor Contents
+// Cancela job anterior com o mesmo nome (evita duplicata)
+for (CronTrigger ct : [
+    SELECT Id FROM CronTrigger
+    WHERE CronJobDetail.Name = 'GoalBatch - Diário 9h'
+]) {
+    System.abortJob(ct.Id);
+}
 
-string tempvar = 'Enter_your_name_here';
-System.debug('Hello World!');
-System.debug('My name is ' + tempvar);
+// Agenda: seg–sex às 09:00
+String cron = '0 0 9 ? * MON-FRI';
+System.schedule('GoalBatch - Diário 9h', cron, new GoalBatchScheduler());
+
+System.debug('GoalBatchScheduler agendado com sucesso.');
