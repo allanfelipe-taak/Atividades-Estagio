@@ -1,465 +1,652 @@
-# PROJECT TRANSLATION DESIGN REQUIREMENTS
+# DESIGN REQUIREMENTS: Sales Goal & Commission Tracking System
 
-**Date:** 2026-05-20  
-**Project:** ProjetoPricing (Salesforce DX)  
-**Scope:** Internationalization - Portuguese to English  
-**Complexity:** HIGH RISK  
-**Design Status:** PENDING USER CONFIRMATION
+**Generated:** 2026-06-08  
+**Project:** ProjetoPricing  
+**API Version:** 66.0  
+**Package Directory:** `force-app/main/default`
 
 ---
 
 ## EXECUTIVE SUMMARY
 
-This project requires translating **17 custom objects, 12 tabs, 29 Apex classes, 5 triggers, 1 LWC component, plus all related metadata** from Portuguese to English. This is a **structural refactoring** that will impact:
-- Salesforce metadata (object/field API names, layout references, permission assignments)
-- Codebase structure (class names, folder organization, handler names)
-- Data integrity (potential data loss if object API names are renamed without migration)
-- Org dependencies (any formulas, workflows, flows, or external integrations referencing Portuguese API names)
+This design specifies the creation of a fully declarative Sales Goal and Commission Tracking system. Four custom objects will be created with supporting fields, relationships, and metadata. All work is administrative (no Apex, no LWC, no flows). Deployment follows a dependency-order sequence: parent objects first, child objects second, with Page Layout and Permission Set updates.
 
-**Critical Risk:** Renaming custom object API names is NOT a safe in-place operation in Salesforce. The metadata API does not support renaming object API names. This requires either:
-1. Recreating objects (data loss) or
-2. Executing a careful data migration strategy
+**Total Components:**
+- 4 Custom Objects (Goal__c, GoalItem__c, ProductFamily__c, PaymentCondition__c)
+- 9 Custom Fields (distributed across Goal__c and GoalItem__c)
+- 4 Record Types (Performance, Product, ProductFamily, PaymentCondition)
+- 2 Page Layouts (Goal__c, GoalItem__c)
+- 1 Permission Set (Goal_Management)
+- Multiple FLS configurations
 
 ---
 
 ## WHAT USER REQUESTED
 
-"Transform the entire project into English — tabs, objects, classes, everything. Comments in Portuguese can stay in Portuguese."
-
-**Scope as stated:**
-- Translate all visible names to English (UI labels, API names, class names)
-- Keep Portuguese comments in code files
-- Apply to all components: objects, fields, classes, triggers, LWC, tabs, metadata
-
----
-
-## INVENTORY OF COMPONENTS TO TRANSLATE
-
-### Custom Objects (17 total)
-**Portuguese → Proposed English:**
-- Centro_Distribuicao__c → DistributionCenter__c
-- Cidade__c → City__c
-- Condicao_Pagamento__c → PaymentCondition__c (or PaymentTerm__c)
-- Endereco__c → Address__c
-- Estado__c → State__c
-- Frete__c → Freight__c (or Shipping__c)
-- Grupo_de_Conta__c → AccountGroup__c
-- Hierarquia_de_Produto__c → ProductHierarchy__c
-- Imposto__c → Tax__c
-- IntegrationLog__c → (Already English)
-- IntegrationSetting__c → (Already English)
-- Margem__c → Margin__c
-- Pais__c → Country__c
-- Plus standard objects: Order, OrderItem, Product2, PricebookEntry (unchanged)
-
-### Custom Fields (estimated 50+)
-Fields in custom objects, all with Portuguese names:
-- Categoria__c, Valor__c, Produto__c, Status__c, etc.
-Example: Categoria__c → Category__c, Valor__c → Value__c
-
-### Tabs (12 total)
-All custom object tabs, named after objects:
-- Frete__c.tab-meta.xml → Freight__c.tab-meta.xml
-- Margem__c.tab-meta.xml → Margin__c.tab-meta.xml
-- (etc. - one per custom object)
-
-### Apex Classes (29 total)
-**Portuguese class names that must be renamed:**
-- FreteHandler.cls → FreightHandler.cls (or ShippingHandler.cls)
-- ImpostoHandler.cls → TaxHandler.cls
-- MargemHandler.cls → MarginHandler.cls
-- ContratoTrigger.cls → (in Shared/Interfaces - context unclear, needs clarification)
-
-**Already-English classes (no change needed):**
-- PricingService.cls, OrderHandler.cls, OrderItemHandler.cls
-- IntegrationLog.cls, IntegrationUtils.cls, etc.
-- All Integration/* classes
-
-### Triggers (5 total)
-**Portuguese trigger names:**
-- FreteTrigger.trigger → FreightTrigger.trigger
-- ImpostoTrigger.trigger → TaxTrigger.trigger
-- MargemTrigger.trigger → MarginTrigger.trigger
-- OrderTrigger.trigger, OrderItemTrigger.trigger (already English, no change)
-
-### Lightning Web Components (1 total)
-- recalcularPricing → (Portuguese word: recalcularPricing = "recalculate pricing")
-  Proposed: recalculatePricing (LWC naming usually camelCase, already English-ish)
-
-### Page Layouts (12+)
-- Frete__c-Frete Layout.layout-meta.xml → Freight__c-Freight Layout.layout-meta.xml
-- (All layouts referencing Portuguese object names must be renamed)
-
-### Other Metadata
-- Flexipages, Permission Sets, List Views, etc.
-- All references to Portuguese object/field API names must be updated
+User requested the creation of a complete Salesforce metadata structure for:
+1. Goal__c object (Sales Goal) with commission calculation fields
+2. GoalItem__c object (Goal Item) with performance tracking and lookup relationships
+3. ProductFamily__c and PaymentCondition__c objects as supporting reference objects
+4. All objects fully configured with Page Layouts and Permission Sets
+5. Declarative implementation (admin work only, no code)
+6. Immediate deployment upon completion
 
 ---
 
-## CRITICAL RISKS & CONSTRAINTS
+## OBJECT DEPENDENCY GRAPH
 
-### Risk 1: Object API Name Renaming (HIGHEST)
-**Problem:** Salesforce metadata API does NOT support renaming custom object API names.
+```
+ProductFamily__c (standalone)
+PaymentCondition__c (standalone)
+Goal__c (parent, references User standard object)
+  └─ GoalItem__c (child, Master-Detail to Goal__c + Lookups to Product2, ProductFamily__c, PaymentCondition__c)
+```
 
-**Impact:**
-- Cannot simply rename Centro_Distribuicao__c → DistributionCenter__c in-place
-- Existing data under the old object name will become inaccessible if object is deleted
-- Any external integrations, formulas, or reports referencing old API names will break
-
-**Solutions (User must choose):**
-1. **Data Migration Path** (Recommended if data exists in org):
-   - Create new objects with English API names
-   - Migrate data from old objects to new objects
-   - Update all relationships (lookups, master-detail)
-   - Delete old objects
-   - Update all references in metadata, code, and formulas
-   - **Timeline:** High effort, 2-3x complexity
-
-2. **Org Rebuild** (If org is empty or dev-only):
-   - Delete existing custom objects (data loss acceptable)
-   - Recreate objects with English API names
-   - Deploy metadata, code, and relationships fresh
-   - **Timeline:** Moderate effort, lower complexity
-
-### Risk 2: Field API Name Renaming
-**Problem:** Same as objects — cannot rename in-place.
-
-**Impact:**
-- All field lookups, master-detail relationships, and formula references will break
-- Page layouts must be regenerated
-- Permission sets must be updated
-
-### Risk 3: Code Cross-References
-**Problem:** Apex code contains hardcoded references to object/field API names.
-
-**Impact:**
-- `SOQL` queries: `SELECT Categoria__c FROM Frete__c WHERE Valor__c > 100`
-- Handler methods: `FreteHandler.handle(Frete__c record)`
-- Integration mappings, data factories, test fixtures
-
-**Must be updated:** Every SOQL query, every string literal, every method signature
-
-### Risk 4: Metadata Cross-References
-**Problem:** Metadata files contain hardcoded references to object/field API names.
-
-**Impact:**
-- Page layouts reference field API names in `<fields>` elements
-- Validation rules reference object/field API names
-- Flows, workflows, and assignments reference API names
-- Permission sets enumerate object/field access by API name
-
-**Must be updated:** All metadata XML files
-
-### Risk 5: External Integrations
-**Problem:** If this org is integrated with external systems, those systems may hardcode API name references.
-
-**Impact:**
-- REST/SOAP APIs may expect `Frete__c` in payloads
-- Data integrations may map to old field names
-- Any webhook or external callout expecting specific field names will fail
-
-**Solution:** Coordinate with external system owners; may require dual deployment (accept both old and new names during transition)
-
-### Risk 6: Ambiguous Translation Terms
-**Problem:** Some Portuguese terms have multiple valid English translations.
-
-**Clarification needed from user:**
-- `Frete__c` → "Freight" or "Shipping"?
-- `Condicao_Pagamento__c` → "PaymentCondition" or "PaymentTerm"?
-- `Margem__c` → "Margin" (as in profit margin) or something else?
-- `Imposto__c` → "Tax" (standard in pricing)
-- `ContratoTrigger` → "ContractTrigger"? (What is this interface for? Context unclear.)
+**Deployment Order:**
+1. ProductFamily__c (no dependencies)
+2. PaymentCondition__c (no dependencies)
+3. Goal__c (depends only on standard User object)
+4. GoalItem__c (depends on Goal__c, Product2, ProductFamily__c, PaymentCondition__c)
+5. Page Layouts & Permission Sets (after all objects exist)
 
 ---
 
-## SCOPE OPTIONS FOR USER TO CHOOSE
+## OBJECT 1: Goal__c (Sales Goal / Meta de Vendas)
 
-### Option A: FULL TRANSLATION (Highest Risk, Highest Effort)
-**What gets renamed:**
-- All custom object API names (Centro_Distribuicao__c → DistributionCenter__c, etc.)
-- All custom field API names
-- All class names (FreteHandler → FreightHandler, etc.)
-- All trigger names
-- All tab names
-- All metadata references
-- All SOQL and string literals in code
+### Metadata Files Required
+- `Goal__c.object-meta.xml` — object definition with API version 66.0
+- `Goal__c.layout-meta.xml` — page layout including all fields
+- `Goal_Management.permset-meta.xml` — permission set with FLS
 
-**Effort:** ~150-200 hours of work across:
-- Admin agent: Recreate 17 objects + 50+ fields + layouts + permission sets
-- Developer agent: Rename/update 29 classes, 5 triggers, 1 LWC, all SOQL queries
-- Unit testing agent: Update all test data factories, mocks, fixtures
-- Code review: Full regression testing required
-- DevOps: Plan data migration strategy (if org has data)
+### Fields
 
-**Risk:** HIGH (data loss possible, external integrations will break)
+| API Name | Label | Type | Properties | Required |
+|----------|-------|------|-----------|----------|
+| Salesperson__c | Salesperson | Lookup(User) | - | Yes |
+| Year__c | Year | Number(4,0) | Decimal Places: 0 | Yes |
+| SalesValue__c | Sales Value | Currency | Precision: 18, Scale: 2 | No |
+| CommissionPercentage__c | Commission Percentage | Number(16,2) | Roll-up Summary, SUM aggregation of GoalItem__c.AchievedPercentage__c | No |
+| CommissionValue__c | Commission Value | Formula(Currency) | Formula: `SalesValue__c * CommissionPercentage__c / 100` | No |
 
-**Prerequisite:** User must confirm:
-1. Is the org empty (dev-only) or does it have production data?
-2. Are there external integrations that depend on Portuguese API names?
-3. Are you prepared for a potential rollback/retry cycle?
+### Field Details
 
----
+**Salesperson__c** (Lookup(User))
+- Related List: "Salesperson Goals"
+- Allow re-parenting: No
+- Shows recent items: Yes
+- Filter logic: (Not required—User object is global)
 
-### Option B: SELECTIVE TRANSLATION (Medium Risk, Medium Effort)
-**What gets renamed:**
-- Apex class names only (FreteHandler → FreightHandler)
-- Trigger names only (FreteTrigger → FreightTrigger)
-- LWC names and internal code comments
-- Tab UI labels (in .tab-meta.xml `<label>` field, not API name)
-- **KEEP unchanged:**
-  - Custom object API names (Centro_Distribuicao__c stays as-is)
-  - Custom field API names (all fields keep Portuguese API names)
-  - Page layouts (no rename, just update if class names change)
-  - Permission sets (reference Portuguese object/field names, no change needed)
+**Year__c** (Number(4,0))
+- Range validation: 1900–2999 (recommended)
+- Decimal Places: 0
+- Used for filtering and reporting by year
 
-**UI behavior:** Users see English tab names and English object labels, but object/field API names remain Portuguese (developers see it in Inspector/logs)
+**SalesValue__c** (Currency)
+- Precision: 18, Scale: 2
+- Required for commission calculation formula
+- Stored in org currency
 
-**Effort:** ~40-60 hours across:
-- Developer agent: Rename 15-20 classes/triggers, update SOQL queries
-- Unit testing: Update test class names and fixtures
-- Code review: Verify SOQL still works
-- DevOps: Deploy only Apex + triggers (no metadata changes)
+**CommissionPercentage__c** (Roll-up Summary)
+- **CRITICAL:** Type is Number(16,2), NOT Percent
+- Aggregation function: SUM
+- Parent object: GoalItem__c
+- Field to aggregate: AchievedPercentage__c (raw percent values from child records)
+- Filter logic: None (sum all)
+- **Note:** Salesforce does not allow roll-up summaries on Percent field type; sum of raw numeric values is used
 
-**Risk:** MEDIUM (safer, code-focused, no data migration)
+**CommissionValue__c** (Formula — Currency)
+- Formula: `SalesValue__c * CommissionPercentage__c / 100`
+- Return type: Currency
+- Decimal places: 2
+- Calculated on save
+- Read-only, non-editable
 
-**Tradeoff:** "Under the hood" is still Portuguese; full translation is not achieved
+### Page Layout: Goal__c
 
----
+**Standard Button Customization:**
+- Include: New, Edit, Delete, Clone, Submit for Approval
+- Remove: (none—all standard)
 
-### Option C: MINIMAL TRANSLATION (Low Risk, Low Effort) — NOT RECOMMENDED
-**What gets renamed:**
-- UI labels only (object labels, field labels, tab labels)
-- **KEEP unchanged:**
-  - All API names (objects, fields, classes, everything)
-  - All code (Apex stays as-is)
+**Custom Buttons/Links:**
+- (None requested)
 
-**UI behavior:** Users see English, developers see Portuguese everywhere
+**Field Organization:**
+- **Section 1: Goal Details**
+  - Salesperson__c
+  - Year__c
+  - SalesValue__c
+- **Section 2: Commission Tracking**
+  - CommissionPercentage__c (read-only)
+  - CommissionValue__c (read-only)
+- **Section 3: Related Lists**
+  - Goal Items (related list from GoalItem__c)
 
-**Effort:** ~10-15 hours (admin-only work, update label fields in metadata XML)
-
-**Risk:** LOW (safe, reversible)
-
-**Tradeoff:** Project is NOT truly "transformed to English" — only surface-level cosmetic change. Internal naming remains Portuguese, confusing for new developers.
-
----
-
-## PROPOSED NAMING MAP
-
-**User must confirm these translations before implementation:**
-
-### Objects
-| Portuguese | English | Field/API |
-|-----------|---------|-----------|
-| Centro_Distribuicao__c | DistributionCenter__c | API Name |
-| Cidade__c | City__c | API Name |
-| Condicao_Pagamento__c | PaymentCondition__c | API Name (confirm: PaymentTerm vs Condition?) |
-| Endereco__c | Address__c | API Name |
-| Estado__c | State__c | API Name |
-| Frete__c | **[CONFIRM: Freight or Shipping?]**__c | API Name |
-| Grupo_de_Conta__c | AccountGroup__c | API Name |
-| Hierarquia_de_Produto__c | ProductHierarchy__c | API Name |
-| Imposto__c | Tax__c | API Name |
-| Margem__c | Margin__c | API Name |
-| Pais__c | Country__c | API Name |
-
-### Apex Classes (Sample)
-| Portuguese | English |
-|-----------|---------|
-| FreteHandler.cls | **[CONFIRM: FreightHandler or ShippingHandler?]** |
-| ImpostoHandler.cls | TaxHandler.cls |
-| MargemHandler.cls | MarginHandler.cls |
-| ContratoTrigger.cls | ContractTrigger.cls (or clarify purpose?) |
-| Other classes already English — no change |
-
-### Triggers
-| Portuguese | English |
-|-----------|---------|
-| FreteTrigger.trigger | FreightTrigger.trigger (or ShippingTrigger?) |
-| ImpostoTrigger.trigger | TaxTrigger.trigger |
-| MargemTrigger.trigger | MarginTrigger.trigger |
-
-### Fields (Sample — many more)
-All field API names would follow pattern:
-- Categoria__c → Category__c
-- Valor__c → Value__c
-- Produto__c → Product__c
-- Status__c → Status__c (already English)
+### Record Types
+- Goal__c uses the Master record type (default)
+- No additional record types required for Goal__c
 
 ---
 
-## ADMIN vs DEVELOPMENT SPLIT
+## OBJECT 2: GoalItem__c (Goal Item / Item da Meta)
 
-### **ADMIN WORK** (salesforce-admin)
-Only if **Option A** (Full Translation) is chosen:
+### Metadata Files Required
+- `GoalItem__c.object-meta.xml` — object definition with API version 66.0
+- `GoalItem__c.layout-meta.xml` — page layout for all four record types
+- Field definitions (separate .field-meta.xml files)
 
-1. Create 17 new custom objects with English API names (all fields, relationships, lookups)
-2. Create 50+ custom fields on those objects with English API names
-3. Update all page layouts to reference new field API names
-4. Update all permission sets to grant access to new object/field API names
-5. Create all tabs for new objects
-6. Update any validation rules, formulas, or field dependencies
+### Fields
 
-**If Option B or C:** Only update UI labels in existing metadata (minimal admin work)
+| API Name | Label | Type | Properties | Record Types | Required |
+|----------|-------|------|-----------|---------------|----------|
+| Goal__c | Goal | Master-Detail(Goal__c) | Reparenting: No, Delete: Cascade | All | Yes |
+| TargetValue__c | Target Value | Currency | Precision: 18, Scale: 2 | All | Yes |
+| ProjectedValue__c | Projected Value | Currency | Precision: 18, Scale: 2 | All | No |
+| NegotiatedValue__c | Negotiated Value | Currency | Precision: 18, Scale: 2 | All | No |
+| RealizedValue__c | Realized Value | Currency | Precision: 18, Scale: 2 | All | No |
+| GoalCommissionPercentage__c | Goal Commission Percentage | Percent(16,2) | Precision: 16, Scale: 2 | All | Yes |
+| AchievedPercentage__c | Achieved Percentage | Percent(16,2) | Precision: 16, Scale: 2 | All | No |
+| TargetProduct__c | Target Product | Lookup(Product2) | Related List: "Goal Items" (on Product2), Allow re-parenting: Yes | All | No |
+| TargetProductFamily__c | Target Product Family | Lookup(ProductFamily__c) | Related List: "Goal Items" (on ProductFamily__c), Allow re-parenting: Yes | All | No |
+| TargetPaymentCondition__c | Target Payment Condition | Lookup(PaymentCondition__c) | Related List: "Goal Items" (on PaymentCondition__c), Allow re-parenting: Yes | All | No |
 
-### **DEVELOPMENT WORK** (salesforce-developer + salesforce-unit-testing)
+### Field Details
 
-For **Option A:**
-1. Rename all Apex classes (29 files)
-2. Rename all triggers (5 files)
-3. Update all SOQL queries to use new object/field API names
-4. Update all test data factories (FactoryDataIntegration, TestFactorySObject, etc.)
-5. Update all mock data and fixtures
-6. Rename class method signatures that reference Portuguese object names
-7. Update LWC component names and any hardcoded API references
-8. Create new test classes (if broken by renames)
+**Goal__c** (Master-Detail(Goal__c))
+- Parent object: Goal__c
+- Reparenting allowed: No
+- Child records cascade delete: Yes (delete Goal__c → all GoalItem__c deleted)
+- Write permission: Controlled by parent object sharing
+- Related list label on parent: "Goal Items"
 
-For **Option B:**
-1. Rename class files (FreteHandler → FreightHandler, etc.)
-2. Rename trigger files
-3. Update internal class/method names to English
-4. Keep SOQL queries as-is (still reference Portuguese object/field names)
-5. Update test class names and factories
+**TargetValue__c** (Currency)
+- Precision: 18, Scale: 2
+- Represents the target currency value for this goal item
+- Mandatory field
 
-For **Option C:**
-No development work — only admin updates to XML labels.
+**ProjectedValue__c, NegotiatedValue__c, RealizedValue__c** (Currency)
+- Precision: 18, Scale: 2
+- ProjectedValue__c: Expected value before negotiation
+- NegotiatedValue__c: Value after negotiation
+- RealizedValue__c: Actual value achieved
+- All optional fields for tracking variance
 
----
+**GoalCommissionPercentage__c** (Percent(16,2))
+- Precision: 16, Scale: 2
+- Represents the commission percentage for this specific goal item
+- **CRITICAL:** Type is Percent (NOT Number)—this is the raw value summed in Goal__c.CommissionPercentage__c
+- Mandatory field
+- User can enter values like 5.50 (representing 5.50%)
 
-## EXECUTION ORDER (If Option A - Full Translation)
+**AchievedPercentage__c** (Percent(16,2))
+- Precision: 16, Scale: 2
+- Represents the percentage of target value actually achieved
+- This is the field aggregated into Goal__c.CommissionPercentage__c
+- Optional field
+- Calculated field or manually entered
 
-1. **DESIGN CONFIRMATION** (Gate 1)
-   - User confirms scope (A, B, or C)
-   - User confirms naming map (Freight vs Shipping, etc.)
-   - User confirms data migration readiness
+**TargetProduct__c** (Lookup(Product2))
+- Links to standard Product2 object
+- Allows filtering goal items by product
+- Optional, allows re-parenting
+- Related list on Product2: "Goal Items"
 
-2. **ADMIN** (if Option A)
-   - Create new objects with English API names
-   - Create all new fields
-   - Create layouts, tabs, permission sets
-   - (Do NOT delete old objects yet)
+**TargetProductFamily__c** (Lookup(ProductFamily__c))
+- Links to custom ProductFamily__c object
+- Allows filtering goal items by product family
+- Optional, allows re-parenting
+- Related list on ProductFamily__c: "Goal Items"
 
-3. **DATA MIGRATION** (if org has data)
-   - Create migration plan
-   - Execute data transfer from old objects to new objects
-   - Validate data integrity
-   - Confirm all relationships migrated
+**TargetPaymentCondition__c** (Lookup(PaymentCondition__c))
+- Links to custom PaymentCondition__c object
+- Allows filtering goal items by payment condition
+- Optional, allows re-parenting
+- Related list on PaymentCondition__c: "Goal Items"
 
-4. **DEVELOPER**
-   - Rename all classes, triggers, LWC
-   - Update all SOQL queries to new API names
-   - Update test data factories
-   - Update configuration/integration mappings
+### Page Layout: GoalItem__c
 
-5. **UNIT TESTING**
-   - Create/update test classes
-   - Test all handler triggers
-   - Test all SOQL queries
-   - Test data factories
+Layout must support all four Record Types. Configure layout per record type or use a single layout.
 
-6. **CODE REVIEW**
-   - Verify all references updated
-   - Check for any missed Portuguese API name references
-   - Validate test coverage
+**For all Record Types:**
 
-7. **DEVOPS** (with safeguards)
-   - Deploy admin metadata (new objects, layouts, permission sets)
-   - Deploy all Apex/trigger code
-   - Execute data migration scripts (if applicable)
-   - Perform smoke tests
-   - Delete old objects (if migration successful)
+**Section 1: Goal Information**
+- Goal__c (Master-Detail lookup)
+- TargetValue__c
 
-8. **DOCUMENTATION**
-   - Document translation mapping
-   - Update any developer guides referencing old API names
-   - Record migration steps for future reference
+**Section 2: Projected vs. Realized**
+- ProjectedValue__c
+- NegotiatedValue__c
+- RealizedValue__c
 
----
+**Section 3: Commission & Performance**
+- GoalCommissionPercentage__c
+- AchievedPercentage__c
 
-## CLARIFYING QUESTIONS FOR USER
+**Section 4: Target Specification**
+- TargetProduct__c
+- TargetProductFamily__c
+- TargetPaymentCondition__c
 
-**You MUST answer these before we proceed:**
+**Section 5: Related Lists**
+- (None—GoalItem__c has no child objects)
 
-### Scope & Risk Acceptance
-1. **Which scope option do you choose?**
-   - Option A: Full translation (objects, fields, classes — HIGH RISK)
-   - Option B: Classes & triggers only (MEDIUM RISK)
-   - Option C: UI labels only (LOW RISK)
+**Standard Buttons:**
+- Include: New, Edit, Delete, Clone
+- Remove: (none)
 
-2. **Does your Salesforce org currently contain data?**
-   - Empty/development org? (Easier, can delete old objects)
-   - Production or test org with data? (Requires careful migration)
+### Record Types
 
-3. **Are there external systems integrated with this org?**
-   - REST APIs expecting Portuguese field names?
-   - Data integrations with hardcoded field mappings?
-   - Webhooks or callouts referencing API names?
+| Record Type | API Name | Description | Availability |
+|-------------|----------|-------------|---------------|
+| Performance | Performance | Goal item tracking performance metrics | All users |
+| Product | Product | Goal item for specific product target | All users |
+| ProductFamily | ProductFamily | Goal item for product family target | All users |
+| PaymentCondition | PaymentCondition | Goal item for payment condition target | All users |
 
-### Translation Decisions
-4. **For ambiguous terms, which do you prefer?**
-   - `Frete__c` → "Freight" or "Shipping"?
-   - `Condicao_Pagamento__c` → "PaymentCondition" or "PaymentTerm"?
-   - `ContratoTrigger` → What is this interface? (Purpose/context for naming)
+**Implementation Notes:**
+- No picklist controller field is required (all four record types are independent)
+- If a picklist controller is desired in future, it can be added via admin actions without redesign
+- All record types share the same fields; layout can be uniform or customized per type
+- Default record type: Performance
 
-5. **For class names like `FreteHandler`:**
-   - Should it follow the object name? (FreightHandler)
-   - Or use industry-standard name? (ShippingHandler, which may be clearer)
-
-### Rollback & Contingency
-6. **Do you have a backup/snapshot of your org before we start?**
-   - Recommending you take a snapshot before any changes
-
-7. **If something goes wrong mid-migration, are you okay with:**
-   - Rolling back and re-attempting?
-   - Possible downtime to recreate objects?
-   - Redeploying all Apex code?
+### Compact Layouts
+- Compact Layout (for Chatter, Mobile, etc.): Goal__c, TargetValue__c, AchievedPercentage__c
 
 ---
 
-## DESIGN STATUS
+## OBJECT 3: ProductFamily__c (Product Family)
 
-**This design is PENDING your answers to the clarifying questions above.**
+### Metadata Files Required
+- `ProductFamily__c.object-meta.xml` — minimal object definition
+- `ProductFamily__c.layout-meta.xml` — simple page layout
 
-Once you provide:
-1. Scope choice (A, B, or C)
-2. Translation preferences (Freight vs Shipping, etc.)
-3. Risk acceptance confirmation
-4. Data status confirmation
+### Fields
 
-Then I will invoke the specialist agents in the correct order and produce the full implementation.
+| API Name | Label | Type | Properties | Required |
+|----------|-------|------|-----------|----------|
+| Name | Product Family Name | Text(255) | Unique: No | Yes |
 
----
+### Details
+- **Purpose:** Reference object for GoalItem__c lookups
+- **Fields:** Only the standard Name field (auto-generated)
+- **Record Types:** Master (default only)
+- **Page Layout:**
+  - Section: Basic Information
+    - Name (editable)
+  - Section: Related Lists
+    - Goal Items (from GoalItem__c.TargetProductFamily__c)
 
-## FILES INVOLVED
-
-**Total components to translate:**
-- 17 custom objects
-- 12 tabs
-- ~50+ custom fields
-- 1 page layout (per object, ~12-15 layouts)
-- 2 permission sets (estimated)
-- 29 Apex classes
-- 5 triggers
-- 1 LWC component
-- Various flexipages, list views, etc.
-
-**Estimated total files to change: 150-200 metadata/code files**
+### No custom fields, triggers, or validation rules required
 
 ---
 
-## NEXT STEPS
+## OBJECT 4: PaymentCondition__c (Payment Condition)
 
-1. **User responds** to the 7 clarifying questions above
-2. **Design agent confirms** scope and naming map
-3. **Gate 1 Confirmation:** User approves finalized design
-4. **Specialist agents invoked** in order:
-   - Admin (if Option A)
-   - Developer (all options)
-   - Unit Testing (all options)
-   - Code Review (all options)
-   - DevOps + Documentation (parallel, after review passes)
+### Metadata Files Required
+- `PaymentCondition__c.object-meta.xml` — minimal object definition
+- `PaymentCondition__c.layout-meta.xml` — simple page layout
+
+### Fields
+
+| API Name | Label | Type | Properties | Required |
+|----------|-------|------|-----------|----------|
+| Name | Payment Condition Name | Text(255) | Unique: No | Yes |
+
+### Details
+- **Purpose:** Reference object for GoalItem__c lookups
+- **Fields:** Only the standard Name field (auto-generated)
+- **Record Types:** Master (default only)
+- **Page Layout:**
+  - Section: Basic Information
+    - Name (editable)
+  - Section: Related Lists
+    - Goal Items (from GoalItem__c.TargetPaymentCondition__c)
+
+### No custom fields, triggers, or validation rules required
 
 ---
 
-**Design Document Created:** 2026-05-20  
-**Design Status:** AWAITING USER CONFIRMATION  
-**Prepared by:** salesforce-design agent
+## METADATA SUMMARY
+
+### Files to Create
+
+```
+force-app/main/default/objects/
+
+├── Goal__c/
+│   ├── Goal__c.object-meta.xml
+│   ├── fields/
+│   │   ├── Salesperson__c.field-meta.xml
+│   │   ├── Year__c.field-meta.xml
+│   │   ├── SalesValue__c.field-meta.xml
+│   │   ├── CommissionPercentage__c.field-meta.xml
+│   │   └── CommissionValue__c.field-meta.xml
+│   └── Goal__c.layout-meta.xml
+│
+├── GoalItem__c/
+│   ├── GoalItem__c.object-meta.xml
+│   ├── fields/
+│   │   ├── Goal__c.field-meta.xml
+│   │   ├── TargetValue__c.field-meta.xml
+│   │   ├── ProjectedValue__c.field-meta.xml
+│   │   ├── NegotiatedValue__c.field-meta.xml
+│   │   ├── RealizedValue__c.field-meta.xml
+│   │   ├── GoalCommissionPercentage__c.field-meta.xml
+│   │   ├── AchievedPercentage__c.field-meta.xml
+│   │   ├── TargetProduct__c.field-meta.xml
+│   │   ├── TargetProductFamily__c.field-meta.xml
+│   │   └── TargetPaymentCondition__c.field-meta.xml
+│   ├── recordTypes/
+│   │   ├── Performance.recordType-meta.xml
+│   │   ├── Product.recordType-meta.xml
+│   │   ├── ProductFamily.recordType-meta.xml
+│   │   └── PaymentCondition.recordType-meta.xml
+│   └── GoalItem__c.layout-meta.xml
+│
+├── ProductFamily__c/
+│   ├── ProductFamily__c.object-meta.xml
+│   └── ProductFamily__c.layout-meta.xml
+│
+└── PaymentCondition__c/
+    ├── PaymentCondition__c.object-meta.xml
+    └── PaymentCondition__c.layout-meta.xml
+
+permissionsets/
+├── Goal_Management.permset-meta.xml
+
+profiles/
+├── Admin.profile-meta.xml (update with FLS for new fields)
+```
+
+---
+
+## FIELD-LEVEL SECURITY (FLS)
+
+### Permission Set: Goal_Management
+
+Grant CRUD on all Goal__c and GoalItem__c fields:
+
+| Object | Field | Read | Create | Edit |
+|--------|-------|------|--------|------|
+| Goal__c | Salesperson__c | ✓ | ✓ | ✓ |
+| Goal__c | Year__c | ✓ | ✓ | ✓ |
+| Goal__c | SalesValue__c | ✓ | ✓ | ✓ |
+| Goal__c | CommissionPercentage__c | ✓ | ✗ | ✗ |
+| Goal__c | CommissionValue__c | ✓ | ✗ | ✗ |
+| GoalItem__c | Goal__c | ✓ | ✓ | ✗ |
+| GoalItem__c | TargetValue__c | ✓ | ✓ | ✓ |
+| GoalItem__c | ProjectedValue__c | ✓ | ✓ | ✓ |
+| GoalItem__c | NegotiatedValue__c | ✓ | ✓ | ✓ |
+| GoalItem__c | RealizedValue__c | ✓ | ✓ | ✓ |
+| GoalItem__c | GoalCommissionPercentage__c | ✓ | ✓ | ✓ |
+| GoalItem__c | AchievedPercentage__c | ✓ | ✓ | ✓ |
+| GoalItem__c | TargetProduct__c | ✓ | ✓ | ✓ |
+| GoalItem__c | TargetProductFamily__c | ✓ | ✓ | ✓ |
+| GoalItem__c | TargetPaymentCondition__c | ✓ | ✓ | ✓ |
+
+**Notes:**
+- CommissionPercentage__c and CommissionValue__c are read-only (system-calculated)
+- Goal__c Master-Detail field is editable on create only (standard Master-Detail behavior)
+- Goal_Management permission set will be assigned to all sales users and managers
+
+---
+
+## DEPLOYMENT SEQUENCE
+
+### Phase 1: Reference Objects (No Dependencies)
+1. Create ProductFamily__c object
+2. Create PaymentCondition__c object
+3. Deploy to org
+
+### Phase 2: Parent Object
+4. Create Goal__c object with all fields and formula
+5. Create Goal__c page layout
+6. Deploy to org
+
+### Phase 3: Child Object & Relationships
+7. Create GoalItem__c object with all fields
+8. Create GoalItem__c page layout
+9. Create four record types (Performance, Product, ProductFamily, PaymentCondition)
+10. Deploy to org
+
+### Phase 4: Security & Permissions
+11. Create Goal_Management permission set with all FLS configurations
+12. Update Admin profile with FLS (read/write on all fields)
+13. Deploy to org
+14. Assign Goal_Management permission set to users: `sf org assign permset --name Goal_Management`
+
+### Phase 5: Validation
+15. Verify all objects exist in org
+16. Verify fields are present and configured correctly
+17. Verify page layouts display all fields
+18. Verify lookups resolve correctly
+19. Verify Master-Detail relationship enforces cascade delete
+20. Verify roll-up summary calculates correctly (Commission Percentage on Goal__c)
+
+---
+
+## CRITICAL IMPLEMENTATION NOTES
+
+### CommissionPercentage__c (Roll-up Summary)
+- **Type:** Number(16,2), NOT Percent
+- **Parent:** GoalItem__c
+- **Field Aggregated:** AchievedPercentage__c
+- **Aggregation Function:** SUM
+- **Reason:** Salesforce does not support roll-up summaries on Percent field type; sum of raw numeric values is used instead
+
+### CommissionValue__c (Formula)
+- **Formula:** `SalesValue__c * CommissionPercentage__c / 100`
+- **Return Type:** Currency
+- **Behavior:** Auto-calculated on save; read-only in UI
+
+### Master-Detail Relationship (Goal__c → GoalItem__c)
+- Enables roll-up summary on Goal__c
+- Enforces cascade delete: Deleting Goal__c deletes all GoalItem__c records
+- Child records inherit sharing from parent
+- Cannot be re-parented by design
+
+### Lookups (Optional)
+- TargetProduct__c, TargetProductFamily__c, TargetPaymentCondition__c are optional
+- Allow re-parenting (users can change lookup values)
+- No cascade delete (orphaned records remain if lookup is cleared)
+
+### Page Layouts
+- All custom fields must be included in the main section of page layouts
+- Layouts must be created for Goal__c and GoalItem__c before users access the objects
+- Compact Layout should include key fields for mobile and Chatter
+
+### Permission Set Assignment
+- After deployment, assign Goal_Management to all sales users and managers
+- Command: `sf org assign permset --name Goal_Management`
+- Admin profile is updated automatically with full read/write access
+
+---
+
+## TESTING CHECKLIST (For Admin Post-Deployment)
+
+- [ ] ProductFamily__c created and accessible
+- [ ] PaymentCondition__c created and accessible
+- [ ] Goal__c created with all 5 fields
+- [ ] GoalItem__c created with all 10 fields
+- [ ] Master-Detail relationship works (GoalItem__c.Goal__c requires parent Goal__c)
+- [ ] Roll-up summary calculates (Goal__c.CommissionPercentage__c sums AchievedPercentage__c)
+- [ ] Formula field calculates (Goal__c.CommissionValue__c = SalesValue__c * CommissionPercentage__c / 100)
+- [ ] All four Record Types visible on GoalItem__c
+- [ ] Page Layouts display all fields for both objects
+- [ ] Goal_Management permission set grants read/write on all fields
+- [ ] Admin profile has read/write on all fields
+- [ ] Lookups resolve to Product2, ProductFamily__c, PaymentCondition__c
+- [ ] Cascade delete works (delete Goal__c → all GoalItem__c deleted)
+- [ ] Picklist values for GoalItem__c record types show correctly in "New" button
+
+---
+
+## SUCCESS CRITERIA
+
+Deployment is complete when:
+
+1. All four custom objects exist in the org
+2. All fields are present with correct types and configurations
+3. Page Layouts include all fields in visible sections
+4. Goal_Management permission set is created with appropriate FLS
+5. Permission set is assigned to intended users
+6. Roll-up summary on Goal__c.CommissionPercentage__c calculates correctly
+7. Formula on Goal__c.CommissionValue__c calculates correctly
+8. Master-Detail relationship enforces cascade delete
+9. All lookups resolve correctly
+10. Users can create and edit Goal and GoalItem records without permission errors
+
+---
+
+## FILES TO DELIVER
+
+Upon completion, the following files are created in `force-app/main/default/`:
+
+- **Objects:** Goal__c/, GoalItem__c/, ProductFamily__c/, PaymentCondition__c/
+- **Permission Set:** permissionsets/Goal_Management.permset-meta.xml
+- **Profile Update:** profiles/Admin.profile-meta.xml (if applicable)
+
+All files follow Salesforce metadata format (XML) with API version 66.0.
+
+---
+
+**Document Status:** Ready for Admin Implementation  
+**Next Step:** Invoke salesforce-admin subagent with the prompt below
+
+---
+
+# PROMPT FOR salesforce-admin
+
+```
+PROJECT CONTEXT:
+- API Version: 66.0
+- Package Directory: force-app/main/default
+- All work is declarative (no code, no Apex, no LWC)
+- Deployment will follow the sequence specified in the design document
+- Do NOT deploy to org yet — create metadata files only
+
+CRITICAL REQUIREMENTS:
+1. CommissionPercentage__c on Goal__c is a Roll-up Summary (NOT Percent field type), SUM of GoalItem__c.AchievedPercentage__c
+2. CommissionValue__c on Goal__c is a Formula (Currency): SalesValue__c * CommissionPercentage__c / 100
+3. Goal__c → GoalItem__c is Master-Detail (cascade delete enabled)
+4. All four Record Types on GoalItem__c (Performance, Product, ProductFamily, PaymentCondition) must exist
+5. ProductFamily__c and PaymentCondition__c are reference objects with only a Name field (text)
+6. All page layouts must include all custom fields in visible sections
+7. Goal_Management permission set must grant read/write on all fields (except roll-up and formula fields which are read-only)
+
+SCOPE:
+
+OBJECT 1: Goal__c (Sales Goal / Meta de Vendas)
+Fields to create:
+- Salesperson__c: Lookup(User), required
+- Year__c: Number(4,0), required
+- SalesValue__c: Currency, optional
+- CommissionPercentage__c: Roll-up Summary Number(16,2), aggregates GoalItem__c.AchievedPercentage__c with SUM function
+- CommissionValue__c: Formula(Currency) = SalesValue__c * CommissionPercentage__c / 100
+
+Page Layout Goal__c:
+- Section 1 (Goal Details): Salesperson__c, Year__c, SalesValue__c
+- Section 2 (Commission Tracking): CommissionPercentage__c, CommissionValue__c (both read-only)
+- Section 3 (Related Lists): Goal Items
+
+OBJECT 2: GoalItem__c (Goal Item / Item da Meta)
+Fields to create:
+- Goal__c: Master-Detail(Goal__c), required, cascade delete enabled
+- TargetValue__c: Currency(18,2), required
+- ProjectedValue__c: Currency(18,2), optional
+- NegotiatedValue__c: Currency(18,2), optional
+- RealizedValue__c: Currency(18,2), optional
+- GoalCommissionPercentage__c: Percent(16,2), required
+- AchievedPercentage__c: Percent(16,2), optional (this is the field aggregated into Goal__c.CommissionPercentage__c)
+- TargetProduct__c: Lookup(Product2), optional, allow re-parenting
+- TargetProductFamily__c: Lookup(ProductFamily__c), optional, allow re-parenting
+- TargetPaymentCondition__c: Lookup(PaymentCondition__c), optional, allow re-parenting
+
+Record Types to create:
+- Performance (default)
+- Product
+- ProductFamily
+- PaymentCondition
+
+Page Layout GoalItem__c (same for all record types):
+- Section 1 (Goal Information): Goal__c, TargetValue__c
+- Section 2 (Projected vs. Realized): ProjectedValue__c, NegotiatedValue__c, RealizedValue__c
+- Section 3 (Commission & Performance): GoalCommissionPercentage__c, AchievedPercentage__c
+- Section 4 (Target Specification): TargetProduct__c, TargetProductFamily__c, TargetPaymentCondition__c
+
+OBJECT 3: ProductFamily__c (Product Family) - Reference Object
+Fields:
+- Name: Text(255) — standard field only
+
+Page Layout ProductFamily__c:
+- Section 1 (Basic Information): Name
+- Section 2 (Related Lists): Goal Items
+
+OBJECT 4: PaymentCondition__c (Payment Condition) - Reference Object
+Fields:
+- Name: Text(255) — standard field only
+
+Page Layout PaymentCondition__c:
+- Section 1 (Basic Information): Name
+- Section 2 (Related Lists): Goal Items
+
+PERMISSION SET: Goal_Management
+Create permission set with read/write access to:
+- Goal__c: Salesperson__c, Year__c, SalesValue__c (CommissionPercentage__c and CommissionValue__c read-only)
+- GoalItem__c: All fields except Cascade Delete is enforced by Master-Detail relationship
+
+FLS Permissions:
+- CommissionPercentage__c (Goal__c): Read only
+- CommissionValue__c (Goal__c): Read only
+- Goal__c (GoalItem__c): Create/Read allowed, Edit NOT allowed (Master-Detail)
+- All other fields: Create/Read/Edit allowed
+
+DEPLOYMENT SEQUENCE:
+1. Create ProductFamily__c object with layout
+2. Create PaymentCondition__c object with layout
+3. Create Goal__c object with all 5 fields and layout
+4. Create GoalItem__c object with all 10 fields, 4 record types, and layout
+5. Create Goal_Management permission set with FLS
+6. Update Admin profile with FLS (if needed)
+
+VALIDATION AFTER CREATION (before deployment):
+- Verify all object metadata files are created in force-app/main/default/objects/
+- Verify Goal__c layout includes all fields in sections
+- Verify GoalItem__c layout includes all fields and supports all record types
+- Verify CommissionPercentage__c is configured as Roll-up Summary with SUM aggregation
+- Verify CommissionValue__c formula is correct: SalesValue__c * CommissionPercentage__c / 100
+- Verify Master-Detail relationship on Goal__c → GoalItem__c
+- Verify all lookups are properly configured
+
+OUTPUT:
+- Create all metadata files in force-app/main/default/ following Salesforce XML format
+- Metadata API version: 66.0
+- Do NOT run any deployment commands (sf project deploy, etc.)
+- Do NOT assign permission sets
+- Save all files to the local file system only
+
+COMPLETION CHECKLIST:
+- [ ] ProductFamily__c object created with object-meta.xml and layout
+- [ ] PaymentCondition__c object created with object-meta.xml and layout
+- [ ] Goal__c object created with 5 fields, layout, and page layout
+- [ ] GoalItem__c object created with 10 fields, 4 record types, and layout
+- [ ] Goal_Management permission set created with FLS
+- [ ] All files use API version 66.0
+- [ ] CommissionPercentage__c configured as Roll-up Summary (Number type, SUM)
+- [ ] CommissionValue__c configured as Formula (Currency)
+- [ ] Master-Detail relationship created with cascade delete
+- [ ] All page layouts include all custom fields in visible sections
+- [ ] All files saved to force-app/main/default/
+```
+
+---
+
+CONFIRMATION GATE:
+After the Admin Agent completes, you will receive the metadata files. Review them to ensure:
+1. All objects exist
+2. All fields are present with correct types
+3. Page layouts include all fields
+4. Roll-up and formula fields are correctly configured
+5. Master-Detail relationship is enabled
+6. Permission set has appropriate FLS
+
+Once confirmed, proceed to deployment with salesforce-devops agent.
