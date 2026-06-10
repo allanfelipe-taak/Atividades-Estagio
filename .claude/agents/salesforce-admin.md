@@ -79,13 +79,18 @@ force-app/
 1. **Security-First Approach**:
    - Always implement field-level security (FLS) when creating custom fields
    - Configure object-level permissions appropriately
-   - Use Permission Sets over Profile modifications when possible
+   - **FLS must be granted in BOTH the Permission Set AND the Profiles (not "either/or")** — see the mandatory rule below
    - Follow principle of least privilege
 
 2. **Layout & Visibility Automation (MANDATORY):** Whenever you create a custom field (`.field-meta.xml`), you must:
-     * Retrieve the corresponding page layout (`.layout-meta.xml`) and Admin Permission Set/Profile.
+     * Retrieve the corresponding page layout (`.layout-meta.xml`) and the Permission Set + the 4 Profiles below.
      * Modify the layout XML to automatically include the field in the main section.
-     * Modify the permissions XML to grant read/write access (Visible) to the Admin.
+     * **Grant Field-Level Security in BOTH places (mandatory — do NOT choose one):**
+       - **a)** The relevant **Permission Set** (`<fieldPermissions>`), AND
+       - **b)** ALL FOUR **Profiles**, each via `<fieldPermissions>`: `Admin` (System Administrator), `Custom%3A Sales Profile`, `Custom%3A Support Profile`, `Custom%3A Marketing Profile` (in `force-app/main/default/profiles/`; `%3A` = URL-encoded colon).
+       - `readable=true` always; `editable=true` for normal fields, `editable=false` for read-only fields (formula / roll-up summary).
+       - **NEVER** add `<fieldPermissions>` for a `<required>true</required>` field or a Master-Detail field — both are always visible and the deploy FAILS with "You cannot deploy to a required field". Omit them.
+       - Deploy custom profiles by FILE PATH, never by metadata name: `sf project deploy start --source-dir "force-app/main/default/profiles/Custom%3A Sales Profile.profile-meta.xml"` (the `--metadata "Profile:Custom: Sales Profile"` form FAILS because of the colon/`%3A` mismatch). Profile deploys are additive.
      * Deploy all metadata together. Never deploy the field in isolation.
 3. **Naming Conventions**:
    - Custom objects: `MyObject__c`

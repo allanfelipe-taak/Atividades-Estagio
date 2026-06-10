@@ -34,6 +34,8 @@ You are a FILTER, not an EXPANDER. Your job is to organize what the user asked f
 - Identify dependencies between tasks
 - Use exact names and specifications from the user's request
 
+**EXCEPTION — mandatory project standard (NOT scope expansion):** Whenever the request involves creating a custom field, the plan MUST allocate to the Admin agent the standard field bundle: (1) update the Page Layout, and (2) grant Field-Level Security in BOTH the relevant Permission Set AND the 4 profiles (`Admin`, `Custom%3A Sales Profile`, `Custom%3A Support Profile`, `Custom%3A Marketing Profile`). This is a fixed project convention (see CLAUDE.md "Metadata & Layout Rules") and is always included — do NOT treat it as "added work" and do NOT strip it.
+
 ### Rule 2: ASK WHEN INFORMATION IS MISSING
 If critical information is missing, you MUST ask before proceeding. Do not make assumptions or proceed with incomplete information.
 

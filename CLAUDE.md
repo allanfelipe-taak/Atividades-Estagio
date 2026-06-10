@@ -354,7 +354,12 @@ This is a Salesforce DX project.
 ### Metadata & Layout Rules (MANDATORY)
 - **Custom Field Creation:** No custom field should ever be created in isolation. Whenever a `.field-meta.xml` file is generated, the workflow must ensure the appropriate subagent updates:
   1. The corresponding Page Layout (`.layout-meta.xml`) to include the new field in the main section (ensuring visibility in both the 'New' modal and 'Details' tab).
-  2. The Admin Profile or Permission Set to grant full read/write access (Field-Level Security).
+  2. **Field-Level Security — grant in BOTH places (mandatory, not "either/or"):**
+     - **a)** The relevant **Permission Set** (`<fieldPermissions>`), AND
+     - **b)** ALL FOUR of these **Profiles**, each via `<fieldPermissions>`: `Admin` (System Administrator), `Custom%3A Sales Profile`, `Custom%3A Support Profile`, `Custom%3A Marketing Profile` (files in `force-app/main/default/profiles/`; `%3A` is the URL-encoded colon).
+     - Set `readable=true` always; `editable=true` for normal fields, `editable=false` for read-only fields (formula / roll-up summary).
+     - **NEVER** add `<fieldPermissions>` for a field marked `<required>true</required>` or for a Master-Detail relationship field — both are always visible and the deploy FAILS with "You cannot deploy to a required field". Omit them entirely.
+     - Deploy custom profiles by FILE PATH, never by metadata name: `sf project deploy start --source-dir "force-app/main/default/profiles/Custom%3A Sales Profile.profile-meta.xml"` (deploying `--metadata "Profile:Custom: Sales Profile"` FAILS due to the colon/`%3A` mismatch). Profile deploys are additive and won't wipe existing permissions.
   3. Execute `sf project retrieve` for layouts and permissions from the org before modifying local files, and `sf project deploy` the entire bundle together at the end.
 
 - **Permission Set Assignment:** Always run `sf org assign permset --name <Permission_Set_Name>` right after a successful deployment so the user doesn't have to manually assign it in the UI.

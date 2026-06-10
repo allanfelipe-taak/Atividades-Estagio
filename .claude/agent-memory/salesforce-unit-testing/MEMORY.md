@@ -1,0 +1,1 @@
+- [GoalBatch Test Patterns](goalBatch-test-patterns.md) — Batch execution testing, bulk data scenarios, salesperson requirement workaround
