@@ -1,0 +1,3 @@
+- [Batch Aggregation Null Handling](batch-null-handling.md) — GoalValueBatch pattern: clarify intent when source records absent
+- [Persistent Error Logging](error-logging-patterns.md) — System.debug insufficient for ops teams; use Error_Log__c object or AsyncApexJob query
+- [Year Field Type Safety](year-field-casting.md) — CALENDAR_YEAR returns Integer; verify schema type before casting to avoid TypeException

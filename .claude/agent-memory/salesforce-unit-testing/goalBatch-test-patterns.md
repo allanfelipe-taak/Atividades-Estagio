@@ -1,80 +1,49 @@
 ---
 name: goalBatch-test-patterns
-description: Test patterns and coverage strategy for GoalBatch and GoalBatchScheduler batch processing
+description: Batch execution testing, bulk data scenarios, Order status filtering, replication logic, and salesperson/year aggregation patterns
 metadata:
-  type: project
+  type: reference
 ---
 
-## GoalBatchTest Coverage Summary
+# GoalValueBatch Test Patterns
 
-**Test File:** `force-app/main/default/classes/Application/GoalBatchTest.cls`
-**API Version:** 66.0
-**Total Test Methods:** 10
-**Expected Coverage:** 95%+
+## Key Learnings from GoalValueBatchTest
 
-### Key Testing Patterns Established
+### Order Status Values (REAL from org)
+- `'New'` → NegotiatedValue
+- `'In Approval'` → NegotiatedValue
+- `'Approved'` → RealizedValue
+- `'Integrated'` → RealizedValue
+- `'Integration Error'` → IGNORED (not in any aggregation)
 
-#### 1. Batch Execution with Test.startTest()/stopTest()
-- Essential for batch execution in test context
-- Allows batch to run synchronously within tests
-- Properly resets governor limits
+**What NOT to use:**
+- `'Processing'` — does NOT exist as expected; was likely a misunderstanding
+- `'Draft'` — is a StatusCode, not a real Status; don't use for business logic tests
 
-#### 2. Bulk Data Creation in @testSetup
-- 200+ GoalItem records created across multiple scenarios
-- Pre-distributed across 3 Goal records to test different branches
-- Governor limit safe: bulk inserts with proper list usage
+### Setup Pattern for Orders with TotalAmount
 
-#### 3. Test Data Scenarios
-- **Scenario A (50 items):** RealizedValue >= TargetValue (meta atingida) → AchievedPercentage should equal GoalCommissionPercentage
-- **Scenario B (50 items):** RealizedValue < TargetValue (meta não atingida) → AchievedPercentage should be 0
-- **Scenario C (50 items):** RealizedValue is null → AchievedPercentage should be 0
-- **Scenario D (50 items):** TargetValue is null → AchievedPercentage should be 0
-- **Scenario E:** Edge case: RealizedValue == TargetValue (exact equality)
+Since `Order.TotalAmount` is READ-ONLY and calculated from OrderItems:
 
-#### 4. Salesperson Field Requirement
-- Goal__c.Salesperson__c is required via validation rule `Salesperson_Required`
-- Solution: Query existing active User with `[SELECT Id FROM User WHERE IsActive = true LIMIT 1]`
-- Avoids mixed-DML errors from creating users in tests
+1. Create infrastructure: DistributionCenter, PaymentTerm, Address
+2. Create Product2 with ProductionCost__c field populated
+3. Create PricebookEntry with base UnitPrice
+4. Create pricing rules: Margin, Freight, Tax (all Status='Approved')
+5. Create Orders with real status values and EffectiveDate
+6. Create OrderItems with deterministic Quantity (e.g., 3, 2, 4, 5)
+7. TotalAmount auto-calculates from OrderItems via triggers
 
-#### 5. Batch Optimization Testing
-- Tests verify that only records with actual changes are updated
-- Batch logic checks `if (item.AchievedPercentage__c != novaPorcentagem)` before adding to update list
-- Test `testGoalBatch_noUnnecessaryUpdates` pre-sets values to verify no redundant DML
+### Batch Testing Pattern
 
-#### 6. Scheduler Testing (2 approaches)
-- **Approach 1:** `System.schedule()` creates CronTrigger, verifies via SOQL
-- **Approach 2:** Direct execute() call with null SchedulableContext (testable without scheduling)
+- Use Test.startTest()/stopTest() for proper governor limit reset
+- Arrange: verify test data preconditions with SOQL
+- Act: Database.executeBatch(batch, batchSize)
+- Assert: query results and verify aggregation fields
 
-### Coverage Breakdown
+### Key Gotchas
 
-| GoalBatch Method | Coverage | Test Methods |
-|------------------|----------|--------------|
-| `start()` | 100% | All tests (executes batch) |
-| `execute()` | 95%+ | metaAtingida, metaNaoAtingida, nullRealizedValue, nullTargetValue, equalValues, bulkProcessing, customBatchSize |
-| `finish()` | 100% | All tests (completes batch execution) |
-| **GoalBatchScheduler.execute()** | 100% | scheduler_execution, scheduler_batchExecution |
-
-### Critical Code Paths Tested
-
-1. ✓ `RealizedValue__c != null && TargetValue__c != null && RealizedValue__c >= TargetValue__c` → Set to GoalCommissionPercentage
-2. ✓ Null RealizedValue → Set to 0
-3. ✓ Null TargetValue → Set to 0
-4. ✓ RealizedValue < TargetValue → Set to 0
-5. ✓ Null GoalCommissionPercentage (edge case) → Uses default 0
-6. ✓ Optimization: Only update if value changes (no unnecessary DML)
-7. ✓ Scheduler instantiation and batch execution
-
-### Notes for Future Work
-
-- **Batch Size Variability:** Test verifies both batch size 200 (default) and 100 (custom)
-- **No @SeeAllData:** All test data created explicitly; no org data dependencies
-- **Assertions:** All use `Assert` style (not System.assert) for modern Apex patterns
-- **Query Re-verification:** Tests re-query after batch execution to verify persistence
-- **Bulk Safety:** 200+ records in @testSetup ensures governor limit edge cases are tested
-
-### Governor Limit Considerations
-
-- Batch size 200: Safe default, tested
-- Query Locator: Returns all GoalItem__c without LIMIT, proper for batch start()
-- DML: Only updates records that changed, minimizing DML statements
-- Test setup inserts 200+ records; batch processes all in one execution (within test limits)
+1. **Order.TotalAmount is READ-ONLY** — calculated from OrderItems only
+2. **OrderItems trigger fires** — needs Product2.ProductionCost__c and pricing rules
+3. **Status must be real** — New, In Approval, Approved, Integrated, Integration Error
+4. **CALENDAR_YEAR** — Orders use EffectiveDate; Opportunities use CloseDate
+5. **Default → 0** — unmatched aggregations default to 0, not null
+6. **Replication by key** — same (Salesperson, Year) gets identical values
