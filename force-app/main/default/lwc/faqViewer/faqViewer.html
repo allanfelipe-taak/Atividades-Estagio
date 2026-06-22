@@ -1,0 +1,114 @@
+<template>
+    <div class="faq-page">
+
+        <!-- Header -->
+        <div class="faq-header">
+            <div class="faq-header__inner">
+                <div class="faq-header__icon">
+                    <lightning-icon icon-name="utility:question_mark" size="medium" alternative-text="FAQ"></lightning-icon>
+                </div>
+                <div class="faq-header__text">
+                    <h1 class="faq-header__title">Perguntas Frequentes</h1>
+                    <p class="faq-header__subtitle">Encontre respostas rápidas para as dúvidas mais comuns</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="faq-search">
+            <div class="faq-search__wrapper">
+                <lightning-icon
+                    class="faq-search__icon"
+                    icon-name="utility:search"
+                    size="x-small"
+                    alternative-text="Pesquisar">
+                </lightning-icon>
+                <input
+                    type="text"
+                    class="faq-search__input"
+                    placeholder="Pesquisar pergunta..."
+                    value={searchTerm}
+                    oninput={handleSearch}
+                    aria-label="Pesquisar perguntas frequentes"
+                />
+                <template if:true={searchTerm}>
+                    <button class="faq-search__clear" onclick={clearSearch} aria-label="Limpar pesquisa">
+                        <lightning-icon icon-name="utility:close" size="x-small" alternative-text="Limpar"></lightning-icon>
+                    </button>
+                </template>
+            </div>
+            <template if:true={hasResults}>
+                <p class="faq-search__count">
+                    {filteredCount} {resultLabel} encontrado{pluralSuffix}
+                </p>
+            </template>
+        </div>
+
+        <!-- Content Area -->
+        <div class="faq-content">
+
+            <!-- Loading State -->
+            <template if:true={isLoading}>
+                <div class="faq-state faq-state--loading">
+                    <lightning-spinner alternative-text="Carregando..." size="medium"></lightning-spinner>
+                    <p class="faq-state__text">Carregando perguntas...</p>
+                </div>
+            </template>
+
+            <!-- Error State -->
+            <template if:true={hasError}>
+                <div class="faq-state faq-state--error">
+                    <lightning-icon icon-name="utility:error" size="large" alternative-text="Erro"></lightning-icon>
+                    <p class="faq-state__title">Algo deu errado</p>
+                    <p class="faq-state__text">Não foi possível carregar as perguntas. Tente recarregar a página.</p>
+                </div>
+            </template>
+
+            <!-- Empty State -->
+            <template if:true={isEmpty}>
+                <div class="faq-state faq-state--empty">
+                    <lightning-icon icon-name="utility:search" size="large" alternative-text="Sem resultados"></lightning-icon>
+                    <p class="faq-state__title">Nenhuma pergunta encontrada</p>
+                    <p class="faq-state__text">Tente usar outros termos na pesquisa.</p>
+                </div>
+            </template>
+
+            <!-- FAQ List -->
+            <template if:true={hasResults}>
+                <ul class="faq-list" role="list">
+                    <template for:each={filteredFaqs} for:item="faq" for:index="index">
+                        <li key={faq.Id} class={faq.itemClass} role="listitem">
+                            <button
+                                class="faq-item__question"
+                                onclick={toggleItem}
+                                data-id={faq.Id}
+                                aria-expanded={faq.isOpen}
+                                aria-controls={faq.answerId}
+                            >
+                                <span class="faq-item__number">{faq.displayIndex}</span>
+                                <span class="faq-item__question-text">{faq.Question__c}</span>
+                                <span class="faq-item__chevron">
+                                    <lightning-icon
+                                        icon-name={faq.chevronIcon}
+                                        size="x-small"
+                                        alternative-text="Expandir">
+                                    </lightning-icon>
+                                </span>
+                            </button>
+                            <template if:true={faq.isOpen}>
+                                <div class="faq-item__answer" id={faq.answerId} role="region">
+                                    <div class="faq-item__answer-inner">
+                                        <lightning-formatted-rich-text
+                                            value={faq.Answer__c}>
+                                        </lightning-formatted-rich-text>
+                                    </div>
+                                </div>
+                            </template>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+
+        </div>
+    </div>
+</template>
