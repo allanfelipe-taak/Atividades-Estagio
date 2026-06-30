@@ -3,20 +3,10 @@
 
         <!-- Header -->
         <div class="faq-header">
-            <div class="faq-header__inner">
-                <div class="faq-header__icon">
-                    <lightning-icon icon-name="utility:question_mark" size="medium" alternative-text="FAQ"></lightning-icon>
-                </div>
-                <div class="faq-header__text">
-                    <h1 class="faq-header__title">Perguntas Frequentes</h1>
-                    <p class="faq-header__subtitle">Encontre respostas rápidas para as dúvidas mais comuns</p>
-                </div>
-            </div>
-        </div>
+            <h1 class="faq-header__title">FAQ</h1>
 
-        <!-- Search Bar -->
-        <div class="faq-search">
-            <div class="faq-search__wrapper">
+            <!-- Search Bar -->
+            <div class="faq-search">
                 <lightning-icon
                     class="faq-search__icon"
                     icon-name="utility:search"
@@ -26,7 +16,7 @@
                 <input
                     type="text"
                     class="faq-search__input"
-                    placeholder="Pesquisar pergunta..."
+                    placeholder="Pesquisar..."
                     value={searchTerm}
                     oninput={handleSearch}
                     aria-label="Pesquisar perguntas frequentes"
@@ -37,11 +27,6 @@
                     </button>
                 </template>
             </div>
-            <template if:true={hasResults}>
-                <p class="faq-search__count">
-                    {filteredCount} {resultLabel} encontrado{pluralSuffix}
-                </p>
-            </template>
         </div>
 
         <!-- Content Area -->
@@ -76,34 +61,14 @@
             <!-- FAQ List -->
             <template if:true={hasResults}>
                 <ul class="faq-list" role="list">
-                    <template for:each={filteredFaqs} for:item="faq" for:index="index">
-                        <li key={faq.Id} class={faq.itemClass} role="listitem">
-                            <button
-                                class="faq-item__question"
-                                onclick={toggleItem}
-                                data-id={faq.Id}
-                                aria-expanded={faq.isOpen}
-                                aria-controls={faq.answerId}
-                            >
-                                <span class="faq-item__number">{faq.displayIndex}</span>
-                                <span class="faq-item__question-text">{faq.Question__c}</span>
-                                <span class="faq-item__chevron">
-                                    <lightning-icon
-                                        icon-name={faq.chevronIcon}
-                                        size="x-small"
-                                        alternative-text="Expandir">
-                                    </lightning-icon>
-                                </span>
-                            </button>
-                            <template if:true={faq.isOpen}>
-                                <div class="faq-item__answer" id={faq.answerId} role="region">
-                                    <div class="faq-item__answer-inner">
-                                        <lightning-formatted-rich-text
-                                            value={faq.Answer__c}>
-                                        </lightning-formatted-rich-text>
-                                    </div>
-                                </div>
-                            </template>
+                    <template for:each={filteredFaqs} for:item="faq">
+                        <li key={faq.Id} class="faq-item" role="listitem">
+                            <h2 class="faq-item__question">{faq.Question__c}</h2>
+                            <div class="faq-item__answer" id={faq.answerId}>
+                                <lightning-formatted-rich-text
+                                    value={faq.Answer__c}>
+                                </lightning-formatted-rich-text>
+                            </div>
                         </li>
                     </template>
                 </ul>
@@ -111,10 +76,6 @@
                 <!-- Pagination -->
                 <template if:true={hasPagination}>
                     <div class="faq-pagination">
-                        <button class="pagination-arrow" onclick={prevPage} disabled={isPrevDisabled}>
-                            <lightning-icon icon-name="utility:chevronleft" size="x-small" alternative-text="Anterior"></lightning-icon>
-                        </button>
-
                         <template for:each={pages} for:item="page">
                             <button
                                 key={page.number}
@@ -124,10 +85,6 @@
                                 {page.number}
                             </button>
                         </template>
-
-                        <button class="pagination-arrow" onclick={nextPage} disabled={isNextDisabled}>
-                            <lightning-icon icon-name="utility:chevronright" size="x-small" alternative-text="Próximo"></lightning-icon>
-                        </button>
                     </div>
                 </template>
 
