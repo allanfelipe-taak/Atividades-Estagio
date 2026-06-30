@@ -293,6 +293,70 @@
     margin-bottom: 0.3rem;
 }
 
+/* === PAGINATION === */
+.faq-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2rem;
+}
+
+.pagination-arrow {
+    background: var(--faq-white);
+    border: 1.5px solid var(--faq-border);
+    border-radius: 8px;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    --slds-c-icon-color-foreground-default: var(--faq-text);
+}
+
+.pagination-arrow:hover:not(:disabled) {
+    border-color: var(--faq-blue);
+    background: var(--faq-blue-light);
+    --slds-c-icon-color-foreground-default: var(--faq-blue);
+}
+
+.pagination-arrow:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.page-btn {
+    background: var(--faq-white);
+    border: 1.5px solid var(--faq-border);
+    border-radius: 8px;
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--faq-text);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.page-btn:hover {
+    border-color: var(--faq-blue);
+    color: var(--faq-blue);
+    background: var(--faq-blue-light);
+}
+
+.page-btn--active {
+    background: var(--faq-blue);
+    border-color: var(--faq-blue);
+    color: var(--faq-white);
+}
+
+.page-btn--active:hover {
+    background: var(--faq-blue-dark);
+    color: var(--faq-white);
+}
+
 @keyframes slideDown {
     from {
         opacity: 0;
